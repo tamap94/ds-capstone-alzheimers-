@@ -1,3 +1,5 @@
+// Values to change if necessary
+
 waitForUser("Please select the directory, that contains the subfolders for all patients");
 par_dir = getDirectory("Please select the directory, that contains the subfolders for all patients");
 
@@ -16,11 +18,11 @@ for (i=1; i<=457; i++){
 	
 	//convert i into 4-digit format
 	long_i = "000"+i;
-	long_i = substring(long_i, lengthOf(long_i)-3, lengthOf(long_i));
+	long_i = substring(long_i, lengthOf(long_i)-4, lengthOf(long_i));
 		
 	//specify paths for images with either 3 or 4 replicates
-	image_path_3 = par_dir+"/OAS1_0"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_0"+long_i+"_MR1_mpr_n"+3+"_anon_111_t88_gfc_cor_110.gif";
-	image_path_4 = par_dir+"/OAS1_0"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_0"+long_i+"_MR1_mpr_n"+4+"_anon_111_t88_gfc_cor_110.gif";
+	image_path_3 = par_dir+"/OAS1_"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_"+long_i+"_MR1_mpr_n"+3+"_anon_111_t88_gfc_cor_110.gif";
+	image_path_4 = par_dir+"/OAS1_"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_"+long_i+"_MR1_mpr_n"+4+"_anon_111_t88_gfc_cor_110.gif";
 	
 	//try to open image
 	if(File.exists(image_path_4)){
@@ -32,7 +34,7 @@ for (i=1; i<=457; i++){
 		print(image_path_3);
 	}
 	else{
-		print("Image 0"+long_i+" does not exist");
+		print("Image "+long_i+" does not exist");
 		continue;
 	}
 		
@@ -43,7 +45,7 @@ for (i=1; i<=457; i++){
 	run("Crop");
 	
 	//save new image in output directory
-	saveAs("Gif", extract_dir+"/OAS1_000"+i+"_"+extract+".gif");
+	saveAs("Gif", extract_dir+"/OAS1_"+long_i+"_"+extract+".gif");
 	close();
 	
 }
@@ -60,11 +62,11 @@ for (i=1; i<=457; i++){
 	
 	//convert i into 4-digit format
 	long_i = "000"+i;
-	long_i = substring(long_i, lengthOf(long_i)-3, lengthOf(long_i));
+	long_i = substring(long_i, lengthOf(long_i)-4, lengthOf(long_i));
 		
 	//specify paths for images with either 3 or 4 replicates
-	image_path_3 = par_dir+"/OAS1_0"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_0"+long_i+"_MR1_mpr_n"+3+"_anon_111_t88_gfc_tra_90.gif";
-	image_path_4 = par_dir+"/OAS1_0"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_0"+long_i+"_MR1_mpr_n"+4+"_anon_111_t88_gfc_tra_90.gif";
+	image_path_3 = par_dir+"/OAS1_"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_"+long_i+"_MR1_mpr_n"+3+"_anon_111_t88_gfc_tra_90.gif";
+	image_path_4 = par_dir+"/OAS1_"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_"+long_i+"_MR1_mpr_n"+4+"_anon_111_t88_gfc_tra_90.gif";
 	
 	//try to open image
 	if(File.exists(image_path_4)){
@@ -76,7 +78,7 @@ for (i=1; i<=457; i++){
 		print(image_path_3);
 	}
 	else{
-		print("Image 0"+long_i+" does not exist");
+		print("Image "+long_i+" does not exist");
 		continue;
 	}
 		
@@ -86,7 +88,7 @@ for (i=1; i<=457; i++){
 	run("Crop");
 	
 	//save new image in output directory
-	saveAs("Gif", extract_dir+"/OAS1_000"+i+"_"+extract+".gif");
+	saveAs("Gif", extract_dir+"/OAS1_"+long_i+"_"+extract+".gif");
 	close();
 	
 }
@@ -104,11 +106,11 @@ for (i=1; i<=457; i++){
 	
 	//convert i into 4-digit format
 	long_i = "000"+i;
-	long_i = substring(long_i, lengthOf(long_i)-3, lengthOf(long_i));
+	long_i = substring(long_i, lengthOf(long_i)-4, lengthOf(long_i));
 		
 	//specify paths for images with either 3 or 4 replicates
-	image_path_3 = par_dir+"/OAS1_0"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_0"+long_i+"_MR1_mpr_n"+3+"_anon_111_t88_gfc_sag_95.gif";
-	image_path_4 = par_dir+"/OAS1_0"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_0"+long_i+"_MR1_mpr_n"+4+"_anon_111_t88_gfc_sag_95.gif";
+	image_path_3 = par_dir+"/OAS1_"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_"+long_i+"_MR1_mpr_n"+3+"_anon_111_t88_gfc_sag_95.gif";
+	image_path_4 = par_dir+"/OAS1_"+long_i+"_MR1/PROCESSED/MPRAGE/T88_111/OAS1_"+long_i+"_MR1_mpr_n"+4+"_anon_111_t88_gfc_sag_95.gif";
 	
 	//try to open image
 	if(File.exists(image_path_4)){
@@ -120,7 +122,7 @@ for (i=1; i<=457; i++){
 		print(image_path_3);
 	}
 	else{
-		print("Image 0"+long_i+" does not exist");
+		print("Image "+long_i+" does not exist");
 		continue;
 	}
 		
@@ -130,7 +132,7 @@ for (i=1; i<=457; i++){
 	run("Crop");
 	
 	//save new image in output directory
-	saveAs("Gif", extract_dir+"/OAS1_000"+i+"_"+extract+".gif");
+	saveAs("Gif", extract_dir+"/OAS1_"+long_i+"_"+extract+".gif");
 	close();
 	
 }

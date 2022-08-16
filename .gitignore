@@ -1,5 +1,3 @@
-#data
-data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -131,5 +129,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+#data
+data/4_classes_Alzheimers_Dataset
+data/OASIS1
+data/oasis_cs_freesurfer_disc1.tar.gz
 ~$Image_Processing_Info.pptx
 Image_Processing_Info.pptx
