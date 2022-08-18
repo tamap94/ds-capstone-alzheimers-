@@ -5,30 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from matplotlib.patches import Rectangle
 
-def load_MRI_gifs(IDs, plane="all"):
-    '''Given a set of IDs ("OAS1_0xxx_MR1") returns the atlas corrected traverse, sagittal and cortical images as numpy arrays'''
-    tra = []
-    sag = []
-    cor = []
-    for path in IDs:
-        path1 = '../data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
-        for img in os.listdir(path1):
-            if img.endswith('t88_gfc_tra_90.gif'):
-                tra.append(plt.imread(path1+img))
-            elif img.endswith('t88_gfc_sag_95.gif'):
-                sag.append(plt.imread(path1+img))
-            elif img.endswith('t88_gfc_cor_110.gif'):
-                cor.append(plt.imread(path1+img))
-    if plane == "traverse":
-        return np.array(tra)
-    elif plane == "sagittal":
-        return np.array(sag)
-    elif plane == "cortical":
-        return np.array(cor)
-    elif plane == "all":
-        return [np.array(tra), np.array(sag), np.array(cor)]
-    else:
-        print("Inncorect selection of planes")
+
 
 
 def img_mean(images, box=None):
@@ -90,7 +67,5 @@ def old(df):
     '''returns data entries where age is >65'''
     return df[df["Age"]>65]
 
-def extract_box(image, box):
-    '''Extracts from an 2D NumPy image the region specified by a box in the format [x_min, x_max, y_min, y_max]'''
-    return image[box[0]:box[1],box[2]:box[3]]
+
 
