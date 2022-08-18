@@ -132,6 +132,7 @@ dmypy.json
 #data
 data/4_classes_Alzheimers_Dataset
 data/Oasis_Data
+data/Freesurfer_Data
 data/oasis_cs_freesurfer_disc1.tar.gz
 ~$Image_Processing_Info.pptx
 Image_Processing_Info.pptx
