@@ -9,6 +9,7 @@ def load_MRI_gifs(IDs, plane="all"):
     tra = []
     sag = []
     cor = []
+    mask = []
     for path in IDs:
         path1 = '../data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
         for img in os.listdir(path1):
@@ -18,12 +19,16 @@ def load_MRI_gifs(IDs, plane="all"):
                 sag.append(plt.imread(path1+img))
             elif img.endswith('t88_gfc_cor_110.gif'):
                 cor.append(plt.imread(path1+img))
+            elif img.endswith('masked_gfc_tra_90.gif'):
+                mask.append(plt.imread(path1+img))
     if plane == "traverse":
         return np.array(tra)
     elif plane == "sagittal":
         return np.array(sag)
     elif plane == "cortical":
         return np.array(cor)
+    elif plane == "mask":
+        return np.array(mask)
     elif plane == "all":
         return [np.array(tra), np.array(sag), np.array(cor)]
     else:
@@ -33,7 +38,7 @@ def load_MRI_gifs(IDs, plane="all"):
 ## region extraction
 def extract_box(image, box):
     '''Extracts from an 2D NumPy image the region specified by a box in the format [x_min, x_max, y_min, y_max]'''
-    return image[box[0]:box[1],box[2]:box[3]]
+    return image[box[2]:box[3],box[0]:box[1]]
 
 def stacked_boxes(img_stack, box):
     '''Cuts a specified box from a 3D stack of images'''

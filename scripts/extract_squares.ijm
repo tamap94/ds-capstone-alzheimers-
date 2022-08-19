@@ -39,7 +39,7 @@ for (i=1; i<=457; i++){
 	}
 		
 
-	
+	run("Measure");
 	//draw rectangle and crop
 	makeRectangle(45, 104, 86, 51);
 	run("Crop");
@@ -136,3 +136,4 @@ for (i=1; i<=457; i++){
 	close();
 	
 }
+saveAs("Results", extract_dir+"/Results.csv");
