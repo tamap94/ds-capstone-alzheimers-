@@ -25,7 +25,7 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
     df['CDR']=(df['CDR']>0).astype(int)
     return df
 
-def get_slices(IDs, N=0, d=1, dim=0, m=95):
+def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
     '''
     Returns slices of masked 3D-images at given Paths
         Parameters:
@@ -41,11 +41,20 @@ def get_slices(IDs, N=0, d=1, dim=0, m=95):
     '''
     imgs = []
     for path in IDs:
-        path1 = '../data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
-        for path2 in os.listdir(path1):
-            if path2.endswith('masked_gfc.img'):
-                img = nib.load(path1+path2)
+        if file=="segmented":
+            path1 = '../data/Oasis_Data/' + path + '/FSL_SEG/'
+            for path2 in os.listdir(path1):
+                if path2.endswith('fseg.img'):
+                    img = nib.load(path1+path2)
+        elif file=="masked":
+            path1 = '../data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
+            for path2 in os.listdir(path1):
+                if path2.endswith('masked_gfc.img'):
+                    img = nib.load(path1+path2)
         img = img.get_fdata().take(0,axis=3)
+        if normalize:
+            if img.max() > 0.0:
+                img = img/img.max()
         imgs.append(img.take(m, axis=dim))
         for i in range(1,N+1):
             imgs.append(img.take(m+d*i, axis=dim))
