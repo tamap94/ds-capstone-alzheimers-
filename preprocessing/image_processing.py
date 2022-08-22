@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 
 ## image loading
-def load_MRI_gifs(IDs, plane="all"):
+def load_MRI_gifs(IDs, plane="all", rescale=True):
     '''Given a set of IDs ("OAS1_0xxx_MR1") returns the atlas corrected traverse, sagittal and cortical images as numpy arrays'''
     tra = []
     sag = []
