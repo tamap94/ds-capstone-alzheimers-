@@ -131,4 +131,9 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         for i in range(1,N+1):
             imgs.append(img.take(m+d*i, axis=dim))
             imgs.append(img.take(m-d*i, axis=dim))
-    return np.rot90(np.array(imgs), k=2, axes=(1,2)) 
+    imgs = np.array(imgs)
+    if dim ==0:
+        imgs = np.rot90(imgs, k=3, axes=(1,2))
+    elif dim ==2:
+        imgs = np.rot90(imgs, k=2, axes=(1,2))
+    return imgs
