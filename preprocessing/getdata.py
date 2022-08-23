@@ -79,10 +79,12 @@ def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
             if img.max() > 0.0:
                 img = img/img.max()
         imgs.append(img.take(m, axis=dim))
-        for i in range(1,N+1):
+        for i in range(1,N+1): #rotate to match oasis
             imgs.append(img.take(m+d*i, axis=dim))
             imgs.append(img.take(m-d*i, axis=dim))
     return np.array(imgs)
+
+
 
 def get_3D_data(IDs):
     imgs = []
@@ -110,7 +112,11 @@ def get_3D_data_ADNI(IDs):
             if file_path.endswith('brainmask.mgz'):
                 img = nib.load(path3+"/"+file_path)
         img = img.get_fdata()
+        img = img[35:211,15:191,10:218]
         imgs.append(img)
+        imgs= np.array(imgs)
+        imgs = np.rot90(imgs, k=3, axes=(1,2))
+        imgs = np.rot90(imgs, k=2, axes=(1,2))
     return np.array(imgs)
 
 
@@ -130,15 +136,19 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         Returns: 
                 len(IDs)*(1+2N) slices 
     '''
-    if dim == 1:
+    if dim == 1:  #change meaning of imput dimensions to fit oasis data
         dim = 2
     elif dim == 2:
         dim = 1
+        m= 176-m
+    elif dim== 0:
+        m= 176-m
+        
     imgs = []
     for path in IDs:
         path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
-        try: 
-            path2 = path1+os.listdir(path1)[0]
+        try:    #for some subjects, only a Longitudinal image is available
+            path2 = path1+os.listdir(path1)[0] 
         except:
             path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
             path2 = path1+os.listdir(path1)[0]
@@ -147,6 +157,7 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
             if file_path.endswith('brainmask.mgz'):
                 img = nib.load(path3+"/"+file_path)
         img = img.get_fdata()
+        img = img[35:211,15:191,10:218]
         if normalize:
             if img.max() > 0.0:
                 img = img/img.max()
@@ -154,7 +165,7 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         for i in range(1,N+1):
             imgs.append(img.take(m+d*i, axis=dim))
             imgs.append(img.take(m-d*i, axis=dim))
-    imgs = np.array(imgs)
+    imgs = np.array(imgs) #rotate images to align with oasis data
     if dim ==0:
         imgs = np.rot90(imgs, k=3, axes=(1,2))
     elif dim ==2:
