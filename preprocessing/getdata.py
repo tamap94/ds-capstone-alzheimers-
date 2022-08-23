@@ -39,8 +39,13 @@ def get_csvdata_ADNI():
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv("../data/ADNI_Freesurfer/FreeSurfer_8_23_2022.csv").sort_values("Subject")
+    df = pd.read_csv("../data/ADNI_Freesurfer/FreeSurfer_8_23_2022.csv").sort_values(["Subject","Description"])
     df.rename(columns={"Subject":"ID"}, inplace=True)
+    df= df[(df["Description"] != "FreeSurfer Cross-Sectional Processing aparc+aseg") & (df["Description"] != "FreeSurfer Longitudinal Processing aparc+aseg")]
+    image_IDs = []
+    for i in df["ID"].unique():
+        image_IDs.append(df[df["ID"]==i]["Image Data ID"].iloc[0])
+    df= df.loc[df["Image Data ID"].isin(image_IDs)]
     return df
 
 def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
@@ -86,6 +91,24 @@ def get_3D_data(IDs):
         for path2 in os.listdir(path1):
             if path2.endswith('masked_gfc.img'):
                 img = nib.load(path1+path2)
+        img = img.get_fdata()
+        imgs.append(img)
+    return np.array(imgs)
+
+
+def get_3D_data_ADNI(IDs):
+    imgs = []
+    for path in IDs:
+        path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
+        try: 
+            path2 = path1+os.listdir(path1)[0]
+        except:
+            path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
+            path2 = path1+os.listdir(path1)[0]
+        path3 = path2+"/"+os.listdir(path2)[0]
+        for file_path in os.listdir(path3):
+            if file_path.endswith('brainmask.mgz'):
+                img = nib.load(path3+"/"+file_path)
         img = img.get_fdata()
         imgs.append(img)
     return np.array(imgs)
