@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import nibabel as nib
+import matplotlib.pyplot as plt
 import os
 from logging import getLogger
 
@@ -102,10 +103,47 @@ def get_3D_data(IDs):
             if path2.endswith('masked_gfc.img'):
                 img = nib.load(path1+path2)
         img = img.get_fdata()
+        if img.max() > 0.0:
+            img = img/img.max()
         imgs.append(img)
     #logger.info("OASIS 3D-Data loaded")
     return np.array(imgs)
 
+def get_kaggle(TYPE='binary'):
+    path_train = '../data/Alzheimer_s Dataset/train/'
+    path_test = '../data/Alzheimer_s Dataset/test/'
+
+    dem = {'NonDemented': 0, 'VeryMildDemented': 1, 'MildDemented': 2, 'ModerateDemented': 3}
+
+    if TYPE == 'regression':
+        dem = {'NonDemented': 0.0, 'VeryMildDemented': 0.25, 'MildDemented': 0.5, 'ModerateDemented': 1.0}
+    elif TYPE == 'multiclass':
+        for i, d in enumerate(dem):
+            c = np.zeros(4, dtype=np.int64)
+            c[i] = 1
+            dem[d] = c
+    elif TYPE == 'binary':
+        for d in dem:
+            if d == 'NonDemented':
+                dem[d] = 0
+            else: dem[d] = 1
+
+
+    def read_images(path):
+        X = []
+        y = []
+        for d in dem:
+            for img in os.listdir(path+d):
+                X.append(plt.imread(path+d+'/'+img)/255.)
+                y.append(dem[d])
+        X = np.array(X)
+        y = np.array(y)
+        return X, y
+
+    X_train, y_train = read_images(path_train)
+    X_test, y_test = read_images(path_test)
+
+    return X_train, X_test, y_train, y_test
 
 def get_3D_data_ADNI(IDs):
     imgs = []
