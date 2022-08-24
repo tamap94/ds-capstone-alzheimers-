@@ -25,9 +25,10 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
     df['CDR']=(df['CDR']>0).astype(int)
     #logger.info(f"OASIS-csv loaded, drop_young={drop_young}, drop_contradictionas={drop_contradictions}")
+    df["label"] = df["CDR"]
     return df
 
-def get_csvdata_ADNI():
+def get_csvdata_ADNI(drop_MCI = True):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
         
@@ -36,8 +37,7 @@ def get_csvdata_ADNI():
         Processing steps:
             Sort by Subject ID
             Rename column "Subject" to "ID"
-            Remove entries of young patients (Optional)
-            Remove entries where CDR and MMSE results contradict each other
+            adds a column "label" 
         
         Returns: the processed Dataframe
     '''
@@ -49,6 +49,10 @@ def get_csvdata_ADNI():
         image_IDs.append(df[df["ID"]==i]["Image Data ID"].iloc[0])
     df= df.loc[df["Image Data ID"].isin(image_IDs)]
     #logger.info("ADNI-csv loaded")
+    if drop_MCI:
+        df= df[(df["Group"] == "AD") | (df["Group"] == "CN")]
+        df["label"] = df["Group"] == "AD"
+    df["label"] = (df["Group"] == "AD") | (df["Group"] == "MCI")
     return df
 
 def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
