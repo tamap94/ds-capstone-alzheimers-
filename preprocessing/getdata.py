@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import nibabel as nib
 import os
+from logging import getLogger
 
 def get_csvdata(drop_young=True, drop_contradictions=True):
     '''
@@ -23,6 +24,7 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
     df['CDR']=(df['CDR']>0).astype(int)
+    #logger.info(f"OASIS-csv loaded, drop_young={drop_young}, drop_contradictionas={drop_contradictions}")
     return df
 
 def get_csvdata_ADNI():
@@ -46,6 +48,7 @@ def get_csvdata_ADNI():
     for i in df["ID"].unique():
         image_IDs.append(df[df["ID"]==i]["Image Data ID"].iloc[0])
     df= df.loc[df["Image Data ID"].isin(image_IDs)]
+    #logger.info("ADNI-csv loaded")
     return df
 
 def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
@@ -82,6 +85,7 @@ def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
         for i in range(1,N+1): #rotate to match oasis
             imgs.append(img.take(m+d*i, axis=dim))
             imgs.append(img.take(m-d*i, axis=dim))
+    #logger.info("OASIS 2D-Data loaded")
     return np.array(imgs)
 
 
@@ -95,6 +99,7 @@ def get_3D_data(IDs):
                 img = nib.load(path1+path2)
         img = img.get_fdata()
         imgs.append(img)
+    #logger.info("OASIS 3D-Data loaded")
     return np.array(imgs)
 
 
@@ -117,6 +122,7 @@ def get_3D_data_ADNI(IDs):
         imgs= np.array(imgs)
         imgs = np.rot90(imgs, k=3, axes=(1,2))
         imgs = np.rot90(imgs, k=2, axes=(1,2))
+    #logger.info("ADNI 3D-Data loaded")
     return np.array(imgs)
 
 
@@ -170,4 +176,5 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         imgs = np.rot90(imgs, k=3, axes=(1,2))
     elif dim ==2:
         imgs = np.rot90(imgs, k=2, axes=(1,2))
+    #logger.info("ADNI 2D-Data loaded")
     return imgs
