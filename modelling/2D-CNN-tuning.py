@@ -41,8 +41,7 @@ def get_data(dataset, N=0, Ntest=0, d=1, m=90, dim=2, norm=True, file="masked", 
     elif dataset == "ADNI":
         logger.info(f"Loading ADNI-csv, drop_MCI= True")
         df = get_csvdata_ADNI(drop_MCI = drop_MCI)
-    else:
-        logger.error("no valid dataset speficied")
+
 
     #split dataframe into train and test
     logger.info("Train test split on dataframe")
@@ -53,7 +52,7 @@ def get_data(dataset, N=0, Ntest=0, d=1, m=90, dim=2, norm=True, file="masked", 
     
     # load image data (N slices above and below the plane (m), suggested by the datasource)
     # standard values for m are 95 for dim=0, 110 for dim=1, 90 for dim=2
-
+    
     if dataset == "OASIS":
         logger.info(f"Loading 2D-OASIS train data: N,d,m,dim,norm,file={N},{d},{m},{dim},{norm},{file}")
         X_train = get_slices(dfTrain['ID'], N=N, d=d, m=m, dim=dim, normalize=norm, file=file)
@@ -68,6 +67,9 @@ def get_data(dataset, N=0, Ntest=0, d=1, m=90, dim=2, norm=True, file="masked", 
         logger.info(f"Loading 2D-OASIS test data: Ntest,d,m,dim,norm,file={Ntest},{d},{m},{dim},{norm},{file}")
         X_test = get_slices_ADNI(dfTest['ID'], m=m, d=d, dim=dim, N=Ntest, normalize=norm)
     
+
+
+
     y_train = y_train.repeat(1+2*N) 
     data_params = f"N,d,m,dim,Ntest,norm,file={N},{d},{m},{dim},{Ntest},{norm},{file}"
     mlflow.log_params({"loading-params": data_params})
@@ -104,9 +106,8 @@ def build_model(X_train, model_name="CNN_8-16_lessReg"):
     model.compile(
         optimizer = optimizer,
         loss = 'binary_crossentropy', 
-        metrics = ['accuracy'])#, keras.metrics.Precision(), keras.metrics.Recall()])
-    print(model.summary())
-
+        metrics = ['accuracy'])
+    
     return model
     
 def fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 32, VAL_SPLIT= 0.2, EPOCHS=25):
@@ -135,13 +136,18 @@ def fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 
     mlflow.log_metric("test" + "-" + "precision", precision_score(y_test, y_pred.round()).round(2))
 
 #-----------------------------------------------------------------------
+run_id = "best slice in dim=2"
 
-for slice in range(80:90):
-    mlflow.start_run()
-    X_train, X_test, y_train, y_test = get_data(
-        dataset="ADNI",N=0, Ntest=0, d=1, m=slice, dim=2, norm=True,
-         file="masked", drop_young=True, drop_contradictions=True, drop_MCI = True) 
-    
-    model= build_model(X_train, model_name="CNN_8-16_lessReg")
-    fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 32, VAL_SPLIT= 0.2, EPOCHS=25)
-    mlflow.end_run()
+for N in range(1,2,1):
+    for ds in ["OASIS"]:
+        for nrmlze in [True]:
+            for filetype in ["masked"]:
+                for drop_y in ["True"]:
+                    for slice in range(74,98,2):
+                        mlflow.start_run(run_id)
+                        X_train, X_test, y_train, y_test = get_data(
+                            dataset=ds, N=N, Ntest=0, d=2, m=slice, dim=2, norm=nrmlze,
+                            file=filetype, drop_young=drop_y, drop_contradictions=True, drop_MCI = True) 
+                        model= build_model(X_train, model_name="CNN_8-16_lessReg")
+                        fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 32, VAL_SPLIT= 0.2, EPOCHS=30)
+                        mlflow.end_run()
