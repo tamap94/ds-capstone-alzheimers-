@@ -141,3 +141,4 @@ Image_Processing_Info.pptx
 models/
 .mlflow_uri
 modelling/mlruns/
+modelling/logs/

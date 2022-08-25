@@ -220,3 +220,9 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         imgs = np.rot90(imgs, k=2, axes=(1,2))
     #logger.info("ADNI 2D-Data loaded")
     return imgs
+
+
+def get_slices_both(OASIS_IDs, ADNI_IDs, N=0, d=1, dim=0, m=95, normalize=True,  file="masked"):
+    imgs_OASIS = get_slices(IDs= OASIS_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize, file=file)
+    imgs_ADNI =get_slices_ADNI(IDs= ADNI_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize)
+    return np.concatenate((imgs_OASIS, imgs_ADNI))
