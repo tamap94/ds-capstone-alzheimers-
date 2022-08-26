@@ -1,39 +1,39 @@
-import numpy as np
-import pandas as pd
 import os
 import sys
-import pickle
+from datetime import datetime
+
 sys.path.append('../')
 print(os.path.abspath("."))
 os.chdir(os.path.abspath(".")+"/modelling")
+from preprocessing.getdata import *
+
+import numpy as np
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, recall_score, precision_score
 from sklearn.utils import shuffle
+from scipy import stats
+
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Dropout, InputLayer, Flatten, Conv2D, MaxPooling2D, BatchNormalization, RandomCrop, RandomRotation, RandomTranslation
-
-RSEED=42
-np.random.seed(42)
-tf.random.set_seed(42)
-
-from scipy import stats
+from keras.layers import Dense, Activation, Dropout, InputLayer, Flatten, Conv2D, MaxPooling2D, BatchNormalization, RandomCrop, RandomRotation, RandomTranslation, LocallyConnected2D
 
 import logging
 from logging import getLogger
 logger = logging.getLogger()
-logging.getLogger("pyhive").setLevel(logging.CRITICAL)  # avoid excessive logs
+logging.getLogger("pyhive").setLevel(logging.CRITICAL) 
 logger.setLevel(logging.INFO)
 
-from datetime import datetime
-
-
 import mlflow 
-from preprocessing.getdata import *
 from config import TRACKING_URI, EXPERIMENT_NAME
+
 mlflow.set_tracking_uri(TRACKING_URI)
 mlflow.set_experiment(EXPERIMENT_NAME)
+
+RSEED=42
+np.random.seed(42)
+tf.random.set_seed(42)
 
 def get_data(dataset, N=0, Ntest=0, d=1, m=90, dim=2, norm=True, file="masked", drop_young=True, drop_contradictions=True, drop_MCI = True):
 
@@ -109,7 +109,7 @@ def get_data(dataset, N=0, Ntest=0, d=1, m=90, dim=2, norm=True, file="masked", 
     
     return X_train, X_test, y_train, y_test
   
-def build_model(X_train, model_name="16_32_with_reg"): #<=========== change this when changin the model architecture
+def build_model(X_train, model_name="16_32_reg_locConn2d"): #<=========== change this when changin the model architecture
     with tf.device('/cpu:0'):
         HEIGHT = X_train.shape[1]
         WIDTH = X_train.shape[2]
@@ -123,7 +123,7 @@ def build_model(X_train, model_name="16_32_with_reg"): #<=========== change this
         # layers
         model.add(InputLayer(input_shape=[HEIGHT, WIDTH, 1], name='image'))
         #model.add(RandomRotation(factor=0.2, fill_mode="reflect", interpolation="bilinear",  seed=None, fill_value=0.0))
-        #model.add(RandomCrop(int(HEIGHT*0.5), int(WIDTH*0.5), seed=RSEED))
+        model.add(LocallyConnected2D(1, 11, strides=11))
         model.add(Conv2D(16, 3, activation="relu", padding="same", kernel_regularizer='l2'))
         model.add(Conv2D(16, 3, activation="relu", padding="same", kernel_regularizer='l2'))
         model.add(Dropout(0.2))
@@ -142,6 +142,7 @@ def build_model(X_train, model_name="16_32_with_reg"): #<=========== change this
             optimizer = optimizer,
             loss = 'binary_crossentropy', 
             metrics = ['accuracy'])
+        print(model.summary)
         
     return model
     
@@ -173,14 +174,16 @@ def fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 
 
 #######################################################################################
 
-
-run_name = "using both datasets" #<=== Change for every run
+run_name = "loc_connected" #<============ TODO Change for every run
+today= datetime.now().strftime("%y-%m-%d")
+os.makedirs("./logs/"+today, exist_ok=True)
 now= datetime.now().strftime("%H:%M:%S")
-logging.basicConfig(format="%(asctime)s: %(message)s", filename="./logs/"+now+"-"+run_name+".log")
+logging.basicConfig(format="%(asctime)s: %(message)s", filename="./logs/"+today+"/"+now+"-"+run_name+".log")
 
+#######################################################################################
 
 for N in range(0,1,1):
-    for ds in ["both"]:
+    for ds in ["OASIS"]:
         for nrmlze in [False]:
             for filetype in ["masked"]:
                 for drop_y in ["True"]:
@@ -188,11 +191,11 @@ for N in range(0,1,1):
                         mlflow.start_run(run_name=run_name)
                         logger.info("Loading data")
                         X_train, X_test, y_train, y_test = get_data(
-                            dataset=ds, N=N, Ntest=0, d=2, m=slice, dim=2, norm=nrmlze,
+                            dataset=ds, N=N, Ntest=0, d=1, m=slice, dim=2, norm=nrmlze,
                             file=filetype, drop_young=drop_y, drop_contradictions=True, drop_MCI = True) 
                         logger.info("Building the model")
                         model= build_model(X_train)
                         logger.info("Training and predicting")
-                        fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 32, VAL_SPLIT= 0.2, EPOCHS=50)
-                        mlflow.log_artifact("./logs/"+now+"-"+run_name+".log")
+                        fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 32, VAL_SPLIT= 0.2, EPOCHS=30)
+                        print(os.path.abspath("."))
                         mlflow.end_run()
