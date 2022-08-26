@@ -56,6 +56,21 @@ def get_csvdata_ADNI(drop_MCI = True):
     df["label"] = (df["Group"] == "AD") | (df["Group"] == "MCI")
     return df
 
+def rename_ADNI(IDs):
+    '''renames all 3D brainsmask files to also contain the SubjectID'''
+    imgs = []
+    for path in IDs:
+        path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
+        try: 
+            path2 = path1+os.listdir(path1)[0]
+        except:
+            path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
+            path2 = path1+os.listdir(path1)[0]
+        path3 = path2+"/"+os.listdir(path2)[0]
+        for file_path in os.listdir(path3):
+            if file_path.endswith('brainmask.mgz'):
+                os.rename(path3+'/brainmask.mgz', path3+"/"+path+"-brainmask.mgz")
+
 def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
     '''
     Returns slices of masked 3D-images at given Paths
