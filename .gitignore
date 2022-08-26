@@ -1,3 +1,4 @@
+.mlflow_uri
 .DS_Store
 data/
 models/

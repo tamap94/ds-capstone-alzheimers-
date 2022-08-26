@@ -1,3 +1,4 @@
+from distutils.dir_util import copy_tree
 import numpy as np
 import pandas as pd
 import nibabel as nib
@@ -42,7 +43,7 @@ def get_csvdata_ADNI():
     '''
     df = pd.read_csv("../data/ADNI_Freesurfer/FreeSurfer_8_23_2022.csv").sort_values(["Subject","Description"])
     df.rename(columns={"Subject":"ID"}, inplace=True)
-    df= df[(df["Description"] != "FreeSurfer Cross-Sectional Processing aparc+aseg") & (df["Description"] != "FreeSurfer Longitudinal Processing aparc+aseg")]
+    df= df[(df["Description"] != "FreeSurfer Cross-Sectional Processing aparc+aseg")] #& (df["Description"] != "FreeSurfer Longitudinal Processing aparc+aseg")]
     image_IDs = []
     for i in df["ID"].unique():
         image_IDs.append(df[df["ID"]==i]["Image Data ID"].iloc[0])
@@ -194,6 +195,58 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         for file_path in os.listdir(path3):
             if file_path.endswith('brainmask.mgz'):
                 img = nib.load(path3+"/"+file_path)
+        img = img.get_fdata()
+        img = img[35:211,15:191,10:218]
+        if normalize:
+            if img.max() > 0.0:
+                img = img/img.max()
+        imgs.append(img.take(m, axis=dim))
+        for i in range(1,N+1):
+            imgs.append(img.take(m+d*i, axis=dim))
+            imgs.append(img.take(m-d*i, axis=dim))
+    imgs = np.array(imgs) #rotate images to align with oasis data
+    if dim ==0:
+        imgs = np.rot90(imgs, k=3, axes=(1,2))
+    elif dim ==2:
+        imgs = np.rot90(imgs, k=2, axes=(1,2))
+    return imgs
+
+def get_slices_ADNI2(IDs, N=0, d=1, dim=0, m=95, normalize=True):
+    '''
+    Returns slices of masked 3D-images at given Paths
+        Parameters:
+                IDs: list of paths 
+                N: number of steps in each direction
+                d: step size
+                dim: axis along which the image is sliced
+                    0= sagittal, 1= cortical, 2= traverse
+                m: starting slice
+                
+                rotates the images by 180 degrees to fit with the oasis data
+
+        Returns: 
+                len(IDs)*(1+2N) slices 
+    '''
+    if dim == 1:  #change meaning of imput dimensions to fit oasis data
+        dim = 2
+    elif dim == 2:
+        dim = 1
+        m= 176-m
+    elif dim== 0:
+        m= 176-m
+        
+    imgs = []
+    for path in IDs:
+        path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
+        foundimg = False
+        for root, dirs, files in os.walk(path1):
+            for filee in files: 
+                if filee.endswith('brainmask.mgz'):
+                    img = nib.load(root+"/"+filee)
+                    foundimg = True
+        if foundimg == False:
+            print(path)
+            continue
         img = img.get_fdata()
         img = img[35:211,15:191,10:218]
         if normalize:
