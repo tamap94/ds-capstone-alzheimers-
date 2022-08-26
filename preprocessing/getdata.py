@@ -4,6 +4,7 @@ import pandas as pd
 import nibabel as nib
 import matplotlib.pyplot as plt
 import os
+from logging import getLogger
 
 def get_csvdata(drop_young=True, drop_contradictions=True):
     '''
@@ -25,9 +26,11 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
     df['CDR']=(df['CDR']>0).astype(int)
+    #logger.info(f"OASIS-csv loaded, drop_young={drop_young}, drop_contradictionas={drop_contradictions}")
+    df["label"] = df["CDR"]
     return df
 
-def get_csvdata_ADNI():
+def get_csvdata_ADNI(drop_MCI = True):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
         
@@ -36,8 +39,7 @@ def get_csvdata_ADNI():
         Processing steps:
             Sort by Subject ID
             Rename column "Subject" to "ID"
-            Remove entries of young patients (Optional)
-            Remove entries where CDR and MMSE results contradict each other
+            adds a column "label" 
         
         Returns: the processed Dataframe
     '''
@@ -48,7 +50,27 @@ def get_csvdata_ADNI():
     for i in df["ID"].unique():
         image_IDs.append(df[df["ID"]==i]["Image Data ID"].iloc[0])
     df= df.loc[df["Image Data ID"].isin(image_IDs)]
+    #logger.info("ADNI-csv loaded")
+    if drop_MCI:
+        df= df[(df["Group"] == "AD") | (df["Group"] == "CN")]
+        df["label"] = df["Group"] == "AD"
+    df["label"] = (df["Group"] == "AD") | (df["Group"] == "MCI")
     return df
+
+def rename_ADNI(IDs):
+    '''renames all 3D brainsmask files to also contain the SubjectID'''
+    imgs = []
+    for path in IDs:
+        path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
+        try: 
+            path2 = path1+os.listdir(path1)[0]
+        except:
+            path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
+            path2 = path1+os.listdir(path1)[0]
+        path3 = path2+"/"+os.listdir(path2)[0]
+        for file_path in os.listdir(path3):
+            if file_path.endswith('brainmask.mgz'):
+                os.rename(path3+'/brainmask.mgz', path3+"/"+path+"-brainmask.mgz")
 
 def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
     '''
@@ -84,6 +106,7 @@ def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
         for i in range(1,N+1): #rotate to match oasis
             imgs.append(img.take(m+d*i, axis=dim))
             imgs.append(img.take(m-d*i, axis=dim))
+    #logger.info("OASIS 2D-Data loaded")
     return np.array(imgs)
 
 
@@ -99,6 +122,7 @@ def get_3D_data(IDs):
         if img.max() > 0.0:
             img = img/img.max()
         imgs.append(img)
+    #logger.info("OASIS 3D-Data loaded")
     return np.array(imgs)
 
 def get_kaggle(TYPE='binary'):
@@ -156,6 +180,7 @@ def get_3D_data_ADNI(IDs):
         imgs= np.array(imgs)
         imgs = np.rot90(imgs, k=3, axes=(1,2))
         imgs = np.rot90(imgs, k=2, axes=(1,2))
+    #logger.info("ADNI 3D-Data loaded")
     return np.array(imgs)
 
 
@@ -209,6 +234,7 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         imgs = np.rot90(imgs, k=3, axes=(1,2))
     elif dim ==2:
         imgs = np.rot90(imgs, k=2, axes=(1,2))
+    #logger.info("ADNI 2D-Data loaded")
     return imgs
 
 def get_slices_ADNI2(IDs, N=0, d=1, dim=0, m=95, normalize=True):
@@ -262,3 +288,8 @@ def get_slices_ADNI2(IDs, N=0, d=1, dim=0, m=95, normalize=True):
     elif dim ==2:
         imgs = np.rot90(imgs, k=2, axes=(1,2))
     return imgs
+
+def get_slices_both(OASIS_IDs, ADNI_IDs, N=0, d=1, dim=0, m=95, normalize=True,  file="masked"):
+    imgs_OASIS = get_slices(IDs= OASIS_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize, file=file)
+    imgs_ADNI =get_slices_ADNI(IDs= ADNI_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize)
+    return np.concatenate((imgs_OASIS, imgs_ADNI))
