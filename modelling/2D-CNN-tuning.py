@@ -91,7 +91,7 @@ def get_data(dataset, N=0, Ntest=0, d=1, m=90, dim=2, norm=True, file="masked", 
         X_train = get_slices_both(dfTrain_o['ID'], dfTrain_a["ID"], N=N, d=d, m=m, dim=dim, normalize=norm)
         
         logger.info(f"Loading and concatenating both test datasets: Ntest,d,m,dim,norm,file={Ntest},{d},{m},{dim},{norm},{file}")
-        X_test = get_slices_both(dfTest_o['ID'], dfTest_a["ID"], N=N, d=d, m=m, dim=dim, normalize=norm)
+        X_test = get_slices_both(dfTest_o['ID'], dfTest_a["ID"], N=Ntest, d=d, m=m, dim=dim, normalize=norm)
         
         logger.info(f"X_train.shape {X_train.shape}, X_test.shape {X_test.shape}")
         y_train_o = y_train_o.repeat(1+2*N)
@@ -103,18 +103,18 @@ def get_data(dataset, N=0, Ntest=0, d=1, m=90, dim=2, norm=True, file="masked", 
         logger.info(f"y_train.shape: {y_train.shape}  y_test.shape {y_test.shape}")
 
         # shuffle, since ADNI is only concatednated to the end of OASIS
-        X_train, y_train  = shuffle(X_train, y_train)
+        X_train, y_train  = shuffle(X_train, y_train, random_state=RSEED)
         X_test, y_test, dfTest  = shuffle(X_test, y_test, dfTest)
     
     data_params = f"N,d,m,dim,Ntest,norm,file={N},{d},{m},{dim},{Ntest},{norm},{file}"
-    mlflow.log_params({"loading-params": data_params})
+    mlflow.log_params({"loading-params": data_params, "X_train.shape": X_train.shape, "X_test.shape":X_test.shape})
     
-    '''X_train = np.repeat(X_train[..., np.newaxis], 3, -1)
-    X_test = np.repeat(X_test[..., np.newaxis], 3, -1) '''
+    X_train = np.repeat(X_train[..., np.newaxis], 3, -1)
+    X_test = np.repeat(X_test[..., np.newaxis], 3, -1) 
     
     return X_train, X_test, y_train, y_test, dfTest
   
-def build_model(X_train, X_test, model_name="..."): #<=========== change this when changing the model architecture
+def build_model(X_train, X_test, model_name="VGG_loc_connected"): #<=========== change this when changing the model architecture
     #with tf.device('/cpu:0'):
     HEIGHT = X_train.shape[1]
     WIDTH = X_train.shape[2]
@@ -124,12 +124,13 @@ def build_model(X_train, X_test, model_name="..."): #<=========== change this wh
     logger.info(f"CNN model instantiated: {model_name}")
     mlflow.set_tag("Model Name",model_name)
     
-    '''    INPUT_SHAPE = (HEIGHT, WIDTH, 3)
+    INPUT_SHAPE = (HEIGHT, WIDTH, 3)
     b_model = tf.keras.applications.VGG16(include_top=False, weights='imagenet', input_shape=INPUT_SHAPE)
 
     model = Sequential()
     model.add(InputLayer(input_shape=INPUT_SHAPE))
     model.add(b_model)
+    model.add(LocallyConnected2D(1, 3, strides=3))
     model.add(Flatten())
     model.add(Dense(64, activation='relu'))
     model.add(Dense(1, activation="sigmoid"))
@@ -141,20 +142,20 @@ def build_model(X_train, X_test, model_name="..."): #<=========== change this wh
         decay_rate=1,
         staircase=False)
     optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule, name='Adam')
-    model.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy'])'''
+    model.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy'])
 
-    model = Sequential()
+    '''model = Sequential()
     # layers
     model.add(InputLayer(input_shape=[HEIGHT, WIDTH, 1], name='image'))
     #model.add(RandomRotation(factor=0.2, fill_mode="reflect", interpolation="bilinear",  seed=None, fill_value=0.0))
-    #model.add(LocallyConnected2D(1, 3, strides=3))
-    model.add(Conv2D(8, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Conv2D(16, 3, activation="relu", padding="same", kernel_regularizer='l2'))
+    model.add(LocallyConnected2D(1, 3, strides=3))
+    model.add(Conv2D(32, 3, activation="relu", padding="same", kernel_regularizer='l2'))
+    model.add(Conv2D(32, 3, activation="relu", padding="same", kernel_regularizer='l2'))
     model.add(Dropout(0.2))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=[2, 2], strides=2))
-    model.add(Conv2D(32, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Conv2D(32, 3, activation="relu", padding="same", kernel_regularizer='l2'))
+    model.add(Conv2D(64, 3, activation="relu", padding="same", kernel_regularizer='l2'))
+    model.add(Conv2D(64, 3, activation="relu", padding="same", kernel_regularizer='l2'))
     model.add(Dropout(0.2))
     model.add(MaxPooling2D(pool_size=[2, 2], strides=2))
     model.add(Flatten())
@@ -166,7 +167,7 @@ def build_model(X_train, X_test, model_name="..."): #<=========== change this wh
         optimizer = optimizer,
         loss = 'binary_crossentropy', 
         metrics = ['accuracy'])
-    print(model.summary)
+    print(model.summary)'''
         
     return model
     
@@ -209,33 +210,34 @@ now= datetime.now().strftime("%H:%M:%S")
 
 #######################################################################################
 
-run_name = "few_slices_for_EA" #<============ TODO Change for every run
+run_name = "VGG16_locConnected" #<============ TODO Change for every run
 ds= "both"
 normalize=False
 filetype= "masked"
 drop_y, drop_cont, drop_MCI = False, False, False 
-N=0
-slices = [(2, 88), (2, 90), (2, 92), (1,90), (1,95), (1,100)]
+#N=1
+slices = [(2, 88)]
 epochs=30
 batch_size=32
 
 ########################################################################################
 logging.basicConfig(format="%(asctime)s: %(message)s", filename="./logs/"+today+"/"+now+"-"+run_name+".log")
-
-for dim_slice in slices:
-    mlflow.start_run(run_name=run_name)
-    now_2 = datetime.now().strftime("%H:%M")
-    logger.info("Loading data")
-    X_train, X_test, y_train, y_test, dfTest = get_data(
-        dataset=ds, N=N, Ntest=0, d=1, m=dim_slice[1], dim=dim_slice[0], norm=normalize,
-        file=filetype, drop_young=drop_y, drop_contradictions=drop_cont, drop_MCI = drop_MCI) 
-    logger.info("Building the model")
-    model= build_model(X_train, X_test)
-    logger.info("Training and predicting")
-    y_pred, y_pred_probs= fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= batch_size, VAL_SPLIT= 0.2, EPOCHS=epochs)
-    print(dfTest.shape, y_test.shape, y_pred.shape, y_pred_probs.shape)
-    dfTest["y_test"], dfTest["y_pred"], dfTest["y_pred_probs"] = y_test, y_pred, y_pred_probs
-    dfTest.to_csv("predictions/"+today+"/"+run_name+"-"+now_2+".csv")
-    model.save("saved_models/"+today+"/"+run_name+"-"+now_2)
-    print(os.path.abspath("."))
-    mlflow.end_run()
+for N in [0,1,2]:
+    for dim_slice in slices:
+        mlflow.start_run(run_name=run_name)
+        now_2 = datetime.now().strftime("%H:%M")
+        logger.info("Loading data")
+        mlflow.log_params({"drop_young":drop_y, "drop_contradictions":drop_con, "drop_MCI":drop_MCI})
+        X_train, X_test, y_train, y_test, dfTest = get_data(
+            dataset=ds, N=N, Ntest=0, d=1, m=dim_slice[1], dim=dim_slice[0], norm=normalize,
+            file=filetype, drop_young=drop_y, drop_contradictions=drop_cont, drop_MCI = drop_MCI) 
+        logger.info("Building the model")
+        model= build_model(X_train, X_test)
+        logger.info("Training and predicting")
+        y_pred, y_pred_probs= fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= batch_size, VAL_SPLIT= 0.2, EPOCHS=epochs)
+        print(dfTest.shape, y_test.shape, y_pred.shape, y_pred_probs.shape)
+        dfTest["y_test"], dfTest["y_pred"], dfTest["y_pred_probs"] = y_test, y_pred, y_pred_probs
+        dfTest.to_csv("predictions/"+today+"/"+run_name+"-"+now_2+".csv")
+        model.save("saved_models/"+today+"/"+run_name+"-"+now_2)
+        print(os.path.abspath("."))
+        mlflow.end_run()

@@ -28,6 +28,7 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
     df['CDR']=(df['CDR']>0).astype(int)
     #logger.info(f"OASIS-csv loaded, drop_young={drop_young}, drop_contradictionas={drop_contradictions}")
     df["label"] = df["CDR"]
+    df["dataset"] = "OASIS"
     return df
 
 def get_csvdata_ADNI(drop_MCI = True):
@@ -55,6 +56,7 @@ def get_csvdata_ADNI(drop_MCI = True):
         df= df[(df["Group"] == "AD") | (df["Group"] == "CN")]
         df["label"] = df["Group"] == "AD"
     df["label"] = ((df["Group"] == "AD") | (df["Group"] == "MCI")).astype(int)
+    df["dataset"] = "ADNI"
     return df
 
 def rename_ADNI(IDs):
