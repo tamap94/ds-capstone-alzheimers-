@@ -72,7 +72,7 @@ def rename_ADNI(IDs):
             if file_path.endswith('brainmask.mgz'):
                 os.rename(path3+'/brainmask.mgz', path3+"/"+path+"-brainmask.mgz")
 
-def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
+def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=False, file="masked"):
     '''
     Returns slices of masked 3D-images at given Paths
         Parameters:
@@ -111,7 +111,7 @@ def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
 
 
 
-def get_3D_data(IDs):
+def get_3D_data(IDs, normalize=False):
     imgs = []
     for path in IDs:
         path1 = '../data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
@@ -119,8 +119,9 @@ def get_3D_data(IDs):
             if path2.endswith('masked_gfc.img'):
                 img = nib.load(path1+path2)
         img = img.get_fdata()
-        if img.max() > 0.0:
-            img = img/img.max()
+        if normalize:
+            if img.max() > 0.0:
+                img = img/img.max()
         imgs.append(img)
     #logger.info("OASIS 3D-Data loaded")
     return np.array(imgs)
