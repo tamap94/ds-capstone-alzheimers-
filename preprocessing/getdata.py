@@ -1,4 +1,3 @@
-from distutils.dir_util import copy_tree
 import numpy as np
 import pandas as pd
 import nibabel as nib
@@ -175,11 +174,12 @@ def get_3D_data_ADNI(IDs):
         for file_path in os.listdir(path3):
             if file_path.endswith('brainmask.mgz'):
                 img = nib.load(path3+"/"+file_path)
-        img = np.asarray(img.dataobj)
+        img = img.get_fdata()
         img = img[35:211,15:191,10:218]
         imgs.append(img)
-    imgs= np.array(imgs)
-    imgs = np.rot90(imgs, k=3, axes=(1,2))
+        imgs= np.array(imgs)
+        imgs = np.rot90(imgs, k=3, axes=(1,2))
+        imgs = np.rot90(imgs, k=2, axes=(1,2))
     #logger.info("ADNI 3D-Data loaded")
     return np.array(imgs)
 
@@ -245,7 +245,7 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         for file_path in os.listdir(path3):
             if file_path.endswith('brainmask.mgz'):
                 img = nib.load(path3+"/"+file_path)
-        img = np.asarray(img.dataobj)
+        img = img.get_fdata()
         img = img[35:211,15:191,10:218]
         if normalize:
             if img.max() > 0.0:
