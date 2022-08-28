@@ -24,9 +24,11 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
         df=df[df['Age']>=60]
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
+    df["CDR_"] = df["CDR"]
     df['CDR']=(df['CDR']>0).astype(int)
     #logger.info(f"OASIS-csv loaded, drop_young={drop_young}, drop_contradictionas={drop_contradictions}")
     df["label"] = df["CDR"]
+    df["dataset"] = "OASIS"
     return df
 
 def get_csvdata_ADNI(drop_MCI = True):
@@ -53,7 +55,8 @@ def get_csvdata_ADNI(drop_MCI = True):
     if drop_MCI:
         df= df[(df["Group"] == "AD") | (df["Group"] == "CN")]
         df["label"] = df["Group"] == "AD"
-    df["label"] = (df["Group"] == "AD") | (df["Group"] == "MCI")
+    df["label"] = ((df["Group"] == "AD") | (df["Group"] == "MCI")).astype(int)
+    df["dataset"] = "ADNI"
     return df
 
 def rename_ADNI(IDs):
@@ -260,6 +263,7 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
     elif dim ==2:
         imgs = np.rot90(imgs, k=2, axes=(1,2))
     #logger.info("ADNI 2D-Data loaded")
+    imgs = imgs/imgs.max()
     return imgs
 
 def get_slices_ADNI2(IDs, N=0, d=1, dim=0, m=95, normalize=True):
