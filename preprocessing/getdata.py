@@ -45,7 +45,7 @@ def get_csvdata_ADNI(drop_MCI = True):
     '''
     df = pd.read_csv("../data/ADNI_Freesurfer/FreeSurfer_8_23_2022.csv").sort_values(["Subject","Description"])
     df.rename(columns={"Subject":"ID"}, inplace=True)
-    df= df[(df["Description"] != "FreeSurfer Cross-Sectional Processing aparc+aseg")] #& (df["Description"] != "FreeSurfer Longitudinal Processing aparc+aseg")]
+    df= df[(df["Description"] != "FreeSurfer Cross-Sectional Processing aparc+aseg") & (df["Description"] != "FreeSurfer Longitudinal Processing aparc+aseg")]
     image_IDs = []
     for i in df["ID"].unique():
         image_IDs.append(df[df["ID"]==i]["Image Data ID"].iloc[0])
@@ -98,7 +98,7 @@ def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=False, file="masked"):
             for path2 in os.listdir(path1):
                 if path2.endswith('masked_gfc.img'):
                     img = nib.load(path1+path2)
-        img = img.get_fdata().take(0,axis=3)
+        img = np.asarray(img.dataobj).take(0,axis=3)
         if normalize:
             if img.max() > 0.0:
                 img = img/img.max()
@@ -118,7 +118,7 @@ def get_3D_data(IDs, normalize=False):
         for path2 in os.listdir(path1):
             if path2.endswith('masked_gfc.img'):
                 img = nib.load(path1+path2)
-        img = img.get_fdata()
+        img = np.asarray(img.dataobj).take(0,axis=3)
         if normalize:
             if img.max() > 0.0:
                 img = img/img.max()
@@ -175,12 +175,34 @@ def get_3D_data_ADNI(IDs):
         for file_path in os.listdir(path3):
             if file_path.endswith('brainmask.mgz'):
                 img = nib.load(path3+"/"+file_path)
-        img = img.get_fdata()
+        img = np.asarray(img.dataobj)
         img = img[35:211,15:191,10:218]
         imgs.append(img)
         imgs= np.array(imgs)
         imgs = np.rot90(imgs, k=3, axes=(1,2))
-        imgs = np.rot90(imgs, k=2, axes=(1,2))
+    #logger.info("ADNI 3D-Data loaded")
+    return np.array(imgs)
+
+def get_3D_data_ADNI2(IDs):
+    imgs = []
+    for path in IDs:
+        path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
+        foundimg = False
+        for root, dirs, files in os.walk(path1):
+            for filee in files: 
+                if filee.endswith('brainmask.mgz'):
+                    img = nib.load(root+"/"+filee)
+                    foundimg = True
+        if foundimg == False:
+            print(path)
+            continue
+        img = np.asarray(img.dataobj)
+        img = img[35:211,15:191,10:218]
+        imgs.append(img)
+    imgs= np.array(imgs)
+    imgs = np.rot90(imgs, k=2, axes=(1,2))
+    imgs = np.rot90(imgs, k=3, axes=(2,3))
+    imgs = np.rot90(imgs, k=2, axes=(1,3))
     #logger.info("ADNI 3D-Data loaded")
     return np.array(imgs)
 
@@ -221,7 +243,7 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         for file_path in os.listdir(path3):
             if file_path.endswith('brainmask.mgz'):
                 img = nib.load(path3+"/"+file_path)
-        img = img.get_fdata()
+        img = np.asarray(img.dataobj)
         img = img[35:211,15:191,10:218]
         if normalize:
             if img.max() > 0.0:
@@ -274,7 +296,7 @@ def get_slices_ADNI2(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         if foundimg == False:
             print(path)
             continue
-        img = img.get_fdata()
+        img = np.asarray(img.dataobj)
         img = img[35:211,15:191,10:218]
         if normalize:
             if img.max() > 0.0:
