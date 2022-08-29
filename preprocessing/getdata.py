@@ -181,8 +181,9 @@ def get_3D_data_ADNI(IDs):
         img = img[35:211,15:191,10:218]
         imgs.append(img)
         imgs= np.array(imgs)
-        imgs = np.rot90(imgs, k=3, axes=(1,2))
         imgs = np.rot90(imgs, k=2, axes=(1,2))
+        imgs = np.rot90(imgs, k=3, axes=(2,3))
+        imgs = np.rot90(imgs, k=2, axes=(1,3))
     #logger.info("ADNI 3D-Data loaded")
     return np.array(imgs)
 
