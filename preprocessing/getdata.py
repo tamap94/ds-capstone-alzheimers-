@@ -238,5 +238,93 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
 
 def get_slices_both(OASIS_IDs, ADNI_IDs, N=0, d=1, dim=0, m=95, normalize=True,  file="masked"):
     imgs_OASIS = get_slices(IDs= OASIS_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize, file=file)
-    imgs_ADNI =get_slices_ADNI(IDs= ADNI_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize)
+    imgs_ADNI =get_slices_ADNI_new(IDs= ADNI_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize)
     return np.concatenate((imgs_OASIS, imgs_ADNI))
+
+
+def crop_adni3D_trav(img):
+    '''crops an ADNI 3D image to fit the brain center in slice 165 with the center of the OASIS images'''
+    cy_o, cx_o, = 86,103
+    (X, Y) = img.shape[1:3]
+    m = np.zeros((X, Y))
+    for x in range(X):
+        for y in range(Y):
+            m[x, y] = img[(165, x, y)] != 0
+    m = m / np.sum(np.sum(m))
+
+    dx = np.sum(m, 1)
+    dy = np.sum(m, 0)
+
+    cx_a = np.sum(dx * np.arange(X)).astype(int)
+    cy_a = np.sum(dy * np.arange(Y)).astype(int)
+    if cx_a < 86:
+        cx_a = 86
+    if cy_a < 103:
+        cy_a = 103
+    img_crop = img[:, (cx_a-cy_o) : (cx_a-cy_o+176), (cy_a-cx_o) : (cy_a-cx_o+208)]
+
+    return img_crop
+
+def crop_adni3D_cort(img):
+    '''crops an ADNI 3D image to fit the brain center in slice 130 with the center of the OASIS images'''
+    cy_o = 86
+    (X, Y) = img.shape[1:3]
+    m = np.zeros((X, Y))
+    for x in range(X):
+        for y in range(Y):
+            m[x, y] = img[(130, x, y)] != 0
+    m = m / np.sum(np.sum(m))
+
+    dx = np.sum(m, 1)
+    dy = np.sum(m, 0)
+
+    cx_a = np.sum(dx * np.arange(X)).astype(int)
+    cy_a = np.sum(dy * np.arange(Y)).astype(int)
+ 
+    if cy_a < 86:
+        cy_a = 86
+    img_crop = img[:, :, cy_a-cy_o : cy_a-cy_o+176]
+
+    return img_crop
+
+def crop_adni_to_oasis(adni_3d):
+    img = np.rot90(adni_3d, k=1, axes=(0,1))
+    img_crop=crop_adni3D_trav(img)
+    img_crop = np.rot90(img_crop, k=1, axes=(0,2))
+    img_crop=crop_adni3D_cort(img_crop)
+    img_crop = np.rot90(img_crop, k=1, axes=(0,2))
+    img_crop = np.rot90(img_crop, k=3, axes=(0,1))
+    img_crop = np.rot90(img_crop, k=1, axes=(1,2))
+    return img_crop
+
+def get_slices_ADNI_new(IDs, N=0, d=1, dim=0, m=95, normalize=True):
+    '''
+    Returns slices of masked 3D-images at given Paths
+        Parameters:
+                IDs: list of paths 
+                N: number of steps in each direction
+                d: step size
+                dim: axis along which the image is sliced
+                    0= sagittal, 1= cortical, 2= traverse
+                m: starting slice
+                
+                rotates the images by 180 degrees to fit with the oasis data
+
+        Returns: 
+                len(IDs)*(1+2N) slices 
+    '''        
+    imgs = []
+    for path in IDs:
+        img = get_ADNI_dataobj(path)
+        if img == False:
+            continue
+        img = np.asarray(img.dataobj)
+        img = crop_adni_to_oasis(img)
+        imgs.append(img.take(m, axis=dim))
+        for i in range(1,N+1):
+            imgs.append(img.take(m+d*i, axis=dim))
+            imgs.append(img.take(m-d*i, axis=dim))
+    imgs = np.array(imgs) 
+    if normalize:
+        imgs = imgs/imgs.max()
+    return imgs
