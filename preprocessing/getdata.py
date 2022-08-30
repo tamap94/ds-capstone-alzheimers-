@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import os
 from logging import getLogger
 
+from sklearn.model_selection import train_test_split
+
 def get_csvdata(drop_young=True, drop_contradictions=True):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
@@ -240,3 +242,33 @@ def get_slices_both(OASIS_IDs, ADNI_IDs, N=0, d=1, dim=0, m=95, normalize=True, 
     imgs_OASIS = get_slices(IDs= OASIS_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize, file=file)
     imgs_ADNI =get_slices_ADNI(IDs= ADNI_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize)
     return np.concatenate((imgs_OASIS, imgs_ADNI))
+
+def get_tts(N=0, d=1, dim=2, m=None, normalize=True, channels=3):
+    if m is None:
+        mdict = {0: 95, 1: 110, 2: 90}
+        m = mdict[dim]
+    df_a = get_csvdata_ADNI()
+    df_o= get_csvdata()
+
+    df_a_train, df_a_test, y_a_train, y_a_test = train_test_split(df_a['ID'], df_a['label'], stratify=df_a['label'], random_state=42)
+    df_o_train, df_o_test, y_o_train, y_o_test = train_test_split(df_o['ID'], df_o['label'], stratify=df_o['label'], random_state=42)
+
+    y_o_train = y_o_train.repeat(1+2*N)
+    y_a_train = y_a_train.repeat(1+2*N)
+
+    X_train_o = get_slices(df_o_train, dim=dim, m=m, N=N, d=d)
+    X_train_a = get_slices_ADNI(df_a_train, dim=dim, m=m, N=N, d=d)
+
+    X_test_o = get_slices(df_o_test, dim=dim, m=m)
+    X_test_a = get_slices_ADNI(df_a_test, dim=dim, m=m)
+
+    X_train = np.concatenate((X_train_o, X_train_a), axis=0)
+    X_test = np.concatenate((X_test_o, X_test_a), axis=0)
+
+    y_train = np.concatenate((y_o_train, y_a_train))
+    y_test = np.concatenate((y_o_test, y_a_test))
+
+    X_train = np.repeat(X_train[..., np.newaxis], channels, -1)
+    X_test = np.repeat(X_test[..., np.newaxis], channels, -1)
+
+    return X_train, X_test, y_train, y_test
