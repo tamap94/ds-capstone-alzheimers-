@@ -126,7 +126,8 @@ def build_model(X_train, X_test, model_name="VGG_loc_connected"): #<=========== 
     
     INPUT_SHAPE = (HEIGHT, WIDTH, 3)
     b_model = tf.keras.applications.VGG16(include_top=False, weights='imagenet', input_shape=INPUT_SHAPE)
-
+    for layer in b_model.layers:
+        layer.trainable = True
     model = Sequential()
     model.add(InputLayer(input_shape=INPUT_SHAPE))
     model.add(b_model)
@@ -212,22 +213,22 @@ now= datetime.now().strftime("%H:%M:%S")
 
 run_name = "VGG16_locConnected" #<============ TODO Change for every run
 ds= "both"
-normalize=False
+normalize=True
 filetype= "masked"
-drop_y, drop_cont, drop_MCI = False, False, False 
+drop_y, drop_cont, drop_MCI = False, False, False
 #N=1
 slices = [(2, 88)]
-epochs=30
+epochs=25
 batch_size=32
 
 ########################################################################################
 logging.basicConfig(format="%(asctime)s: %(message)s", filename="./logs/"+today+"/"+now+"-"+run_name+".log")
-for N in [0,1,2]:
+for N in [1]:
     for dim_slice in slices:
         mlflow.start_run(run_name=run_name)
         now_2 = datetime.now().strftime("%H:%M")
         logger.info("Loading data")
-        mlflow.log_params({"drop_young":drop_y, "drop_contradictions":drop_con, "drop_MCI":drop_MCI})
+        mlflow.log_params({"drop_young":drop_y, "drop_contradictions":drop_cont, "drop_MCI":drop_MCI})
         X_train, X_test, y_train, y_test, dfTest = get_data(
             dataset=ds, N=N, Ntest=0, d=1, m=dim_slice[1], dim=dim_slice[0], norm=normalize,
             file=filetype, drop_young=drop_y, drop_contradictions=drop_cont, drop_MCI = drop_MCI) 
