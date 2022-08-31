@@ -1,3 +1,4 @@
+.mlflow_uri
 .DS_Store
 data/
 models/
@@ -142,3 +143,6 @@ models/
 .mlflow_uri
 modelling/mlruns/
 modelling/logs/
+modelling/saved_models/
+modelling/predictions/
+modelling/gifs/
