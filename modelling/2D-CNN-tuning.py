@@ -144,32 +144,7 @@ def build_model(X_train, X_test, model_name="VGG_loc_connected"): #<=========== 
         staircase=False)
     optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule, name='Adam')
     model.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy'])
-
-    '''model = Sequential()
-    # layers
-    model.add(InputLayer(input_shape=[HEIGHT, WIDTH, 1], name='image'))
-    #model.add(RandomRotation(factor=0.2, fill_mode="reflect", interpolation="bilinear",  seed=None, fill_value=0.0))
-    model.add(LocallyConnected2D(1, 3, strides=3))
-    model.add(Conv2D(32, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Conv2D(32, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Dropout(0.2))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=[2, 2], strides=2))
-    model.add(Conv2D(64, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Conv2D(64, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Dropout(0.2))
-    model.add(MaxPooling2D(pool_size=[2, 2], strides=2))
-    model.add(Flatten())
-    model.add(Dense(units=128, activation="relu", kernel_regularizer='l2'))
-    model.add(Dense(units = 1, kernel_initializer = 'uniform', activation = 'sigmoid'))
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001, name='Adam')
-
-    model.compile(
-        optimizer = optimizer,
-        loss = 'binary_crossentropy', 
-        metrics = ['accuracy'])
-    print(model.summary)'''
-        
+       
     return model
     
 def fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 32, VAL_SPLIT= 0.2, EPOCHS=25):
@@ -194,6 +169,7 @@ def fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 
         y_pred = np.array(stats.mode(y_pred.reshape((test_length,slices_per_test_sample)), axis=1, keepdims=False))[0]
         
     logger.info("Measuring prediction performance and storing on ML-Flow")
+    print(f"Tes-Accuracy is {accuracy_score(y_test, y_pred.round()).round(2)}")
     mlflow.log_metric("test" + "-" + "acc", accuracy_score(y_test, y_pred.round()).round(2))
     mlflow.log_metric("test" + "-" + "recall", recall_score(y_test, y_pred.round()).round(2))
     mlflow.log_metric("test" + "-" + "precision", precision_score(y_test, y_pred.round()).round(2))
@@ -211,34 +187,33 @@ now= datetime.now().strftime("%H:%M:%S")
 
 #######################################################################################
 
-run_name = "VGG16_locConnected" #<============ TODO Change for every run
+run_name = "VGG16_locCon_drop_young33_cort_sag_slices" #<============ TODO Change for every run
 ds= "both"
 normalize=True
 filetype= "masked"
-drop_y, drop_cont, drop_MCI = False, False, False
-#N=1
-slices = [(2, 88)]
-epochs=25
+drop_y, drop_cont, drop_MCI = True, False, False
+N=0
+slices = [(0, 99)]
+epochs=15
 batch_size=32
 
 ########################################################################################
 logging.basicConfig(format="%(asctime)s: %(message)s", filename="./logs/"+today+"/"+now+"-"+run_name+".log")
-for N in [1]:
-    for dim_slice in slices:
-        mlflow.start_run(run_name=run_name)
-        now_2 = datetime.now().strftime("%H:%M")
-        logger.info("Loading data")
-        mlflow.log_params({"drop_young":drop_y, "drop_contradictions":drop_cont, "drop_MCI":drop_MCI})
-        X_train, X_test, y_train, y_test, dfTest = get_data(
-            dataset=ds, N=N, Ntest=0, d=1, m=dim_slice[1], dim=dim_slice[0], norm=normalize,
-            file=filetype, drop_young=drop_y, drop_contradictions=drop_cont, drop_MCI = drop_MCI) 
-        logger.info("Building the model")
-        model= build_model(X_train, X_test)
-        logger.info("Training and predicting")
-        y_pred, y_pred_probs= fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= batch_size, VAL_SPLIT= 0.2, EPOCHS=epochs)
-        print(dfTest.shape, y_test.shape, y_pred.shape, y_pred_probs.shape)
-        dfTest["y_test"], dfTest["y_pred"], dfTest["y_pred_probs"] = y_test, y_pred, y_pred_probs
-        dfTest.to_csv("predictions/"+today+"/"+run_name+"-"+now_2+".csv")
-        model.save("saved_models/"+today+"/"+run_name+"-"+now_2)
-        print(os.path.abspath("."))
-        mlflow.end_run()
+for dim_slice in slices:
+    mlflow.start_run(run_name=run_name)
+    now_2 = datetime.now().strftime("%H:%M")
+    logger.info("Loading data")
+    mlflow.log_params({"drop_young":drop_y, "drop_contradictions":drop_cont, "drop_MCI":drop_MCI})
+    X_train, X_test, y_train, y_test, dfTest = get_data(
+        dataset=ds, N=N, Ntest=0, d=1, m=dim_slice[1], dim=dim_slice[0], norm=normalize,
+        file=filetype, drop_young=drop_y, drop_contradictions=drop_cont, drop_MCI = drop_MCI) 
+    logger.info("Building the model")
+    model= build_model(X_train, X_test)
+    logger.info("Training and predicting")
+    y_pred, y_pred_probs= fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= batch_size, VAL_SPLIT= 0.2, EPOCHS=epochs)
+    print(dfTest.shape, y_test.shape, y_pred.shape, y_pred_probs.shape)
+    dfTest["y_test"], dfTest["y_pred"], dfTest["y_pred_probs"] = y_test, y_pred, y_pred_probs
+    dfTest.to_csv("predictions/"+today+"/"+run_name+"-"+now_2+".csv")
+    model.save("saved_models/"+today+"/"+run_name+"-"+now_2)
+    print(os.path.abspath("."))
+    mlflow.end_run()

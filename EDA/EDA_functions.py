@@ -11,7 +11,7 @@ from matplotlib.patches import Rectangle
 def img_mean(images, box=None, vmin=None, vmax=None, title=None):
     '''Plots mean image of multi-picture numpy array'''
     fig, axes = plt.subplots(1,1, figsize=(4,6))
-    plt.imshow(np.mean(images, axis=0), vmin=vmin, vmax=vmax)
+    plt.imshow(np.mean(images, axis=0), vmin=vmin, vmax=vmax, cmap="viridis")
     if box != None:
         axes.add_patch(Rectangle(xy=(box[0],box[2]), width=box[1]-box[0], height=box[3]-box[2], fill=False))
     axes.axis('off')
@@ -21,8 +21,8 @@ def img_mean(images, box=None, vmin=None, vmax=None, title=None):
 def compare_two_means(images1, images2, title1=None, title2=None, all=False, box=None, vmin=None, vmax=None):
     if all == False:
         fig, axes = plt.subplots(1,2, figsize=(6,8))
-        axes[0].imshow(np.mean(images1, axis=0), vmin=vmin, vmax=vmax)
-        axes[1].imshow(np.mean(images2, axis=0), vmin=vmin,vmax=vmax)
+        axes[0].imshow(np.mean(images1, axis=0), vmin=vmin, vmax=vmax, cmap="viridis")
+        axes[1].imshow(np.mean(images2, axis=0), vmin=vmin,vmax=vmax, cmap="viridis")
         axes[0].set_title(title1)
         axes[1].set_title(title2)
         if box != None:
@@ -32,12 +32,12 @@ def compare_two_means(images1, images2, title1=None, title2=None, all=False, box
             ax.axis('off')
     elif all == True:
         fig, axes = plt.subplots(3,2, figsize=(6,8))
-        axes[0,0].imshow(np.mean(images1[0], axis=0), vmin=vmin, vmax=vmax)
-        axes[0,1].imshow(np.mean(images2[0], axis=0), vmin=vmin, vmax=vmax)
-        axes[1,0].imshow(np.mean(images1[1], axis=0), vmin=vmin, vmax=vmax)
-        axes[1,1].imshow(np.mean(images2[1], axis=0), vmin=vmin, vmax=vmax)
-        axes[2,0].imshow(np.mean(images1[2], axis=0), vmin=vmin, vmax=vmax)
-        axes[2,1].imshow(np.mean(images2[2], axis=0), vmin=vmin, vmax=vmax)
+        axes[0,0].imshow(np.mean(images1[0], axis=0), vmin=vmin, vmax=vmax, cmap="viridis")
+        axes[0,1].imshow(np.mean(images2[0], axis=0), vmin=vmin, vmax=vmax, cmap="viridis")
+        axes[1,0].imshow(np.mean(images1[1], axis=0), vmin=vmin, vmax=vmax, cmap="viridis")
+        axes[1,1].imshow(np.mean(images2[1], axis=0), vmin=vmin, vmax=vmax, cmap="viridis")
+        axes[2,0].imshow(np.mean(images1[2], axis=0), vmin=vmin, vmax=vmax, cmap="viridis")
+        axes[2,1].imshow(np.mean(images2[2], axis=0), vmin=vmin, vmax=vmax, cmap="viridis")
         if box != None:
             axes[0,0].add_patch(Rectangle(xy=(box[0][0],box[0][2]), width=box[0][1]-box[0][0], height=box[0][3]-box[0][2], fill=False))
             axes[0,1].add_patch(Rectangle(xy=(box[0][0],box[0][2]), width=box[0][1]-box[0][0], height=box[0][3]-box[0][2], fill=False))
