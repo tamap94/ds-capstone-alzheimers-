@@ -28,10 +28,10 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
         df=df[df['Age']>=33]
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
-    df["CDR_"] = df["CDR"]
+    #df["CDR_"] = df["CDR"]
     df['CDR']=(df['CDR']>0).astype(int)
-    df["label"] = df["CDR"]
-    df["dataset"] = "OASIS"
+    #df["label"] = df["CDR"]
+    #df["dataset"] = "OASIS"
     return df
 
 def get_csvdata_ADNI(drop_MCI = True):
@@ -279,6 +279,15 @@ def drop_tadpole(df):
     '''
     col = ['FDG','AV45', 'CDRSB',  'MidTemp','DX','RID', 'VISCODE', 'SITE', 'COLPROT', 'ORIGPROT', 'EXAMDATE', 'DX_bl', 'PTETHCAT', 'PTRACCAT', 'PTMARRY', 'PIB', 'ADASQ4', 'RAVLT_learning', 'RAVLT_forgetting', 'RAVLT_perc_forgetting', 'LDELTOTAL', 'DIGITSCOR', 'TRABSCOR', 'FAQ', 'MOCA', 'EcogPtMem', 'EcogPtLang', 'EcogPtVisspat', 'EcogPtPlan', 'EcogPtOrgan', 'EcogPtDivatt', 'EcogPtTotal', 'EcogSPMem', 'EcogSPLang', 'EcogSPVisspat', 'EcogSPPlan', 'EcogSPOrgan', 'EcogSPDivatt', 'EcogSPTotal', 'FLDSTRENG', 'FSVERSION', 'IMAGEUID',  'Fusiform',  'ICV', 'mPACCdigit', 'mPACCtrailsB', 'EXAMDATE_bl', 'CDRSB_bl', 'ADAS11_bl', 'ADAS13_bl', 'ADASQ4_bl', 'MMSE_bl', 'RAVLT_immediate_bl', 'RAVLT_learning_bl', 'RAVLT_forgetting_bl', 'RAVLT_perc_forgetting_bl', 'LDELTOTAL_BL', 'DIGITSCOR_bl', 'TRABSCOR_bl', 'FAQ_bl', 'mPACCdigit_bl', 'mPACCtrailsB_bl', 'FLDSTRENG_bl', 'FSVERSION_bl', 'Ventricles_bl', 'Hippocampus_bl', 'WholeBrain_bl', 'Entorhinal_bl', 'Fusiform_bl', 'MidTemp_bl', 'ICV_bl', 'MOCA_bl', 'EcogPtMem_bl', 'EcogPtLang_bl', 'EcogPtVisspat_bl', 'EcogPtPlan_bl', 'EcogPtOrgan_bl', 'EcogPtDivatt_bl', 'EcogPtTotal_bl', 'EcogSPMem_bl', 'EcogSPLang_bl', 'EcogSPVisspat_bl', 'EcogSPPlan_bl', 'EcogSPOrgan_bl', 'EcogSPDivatt_bl', 'EcogSPTotal_bl', 'ABETA_bl', 'TAU_bl', 'PTAU_bl', 'FDG_bl', 'PIB_bl', 'AV45_bl', 'Years_bl', 'Month_bl', 'Month', 'M', 'update_stamp']
     df.drop(columns=col, inplace=True, axis=1)
+    return df 
+
+def col_tadpole(df): 
+    df["PTAU"].replace("<8",np.nan, inplace=True)
+    df["PTAU"].replace(">120",np.nan, inplace=True)
+    df["ABETA"].replace("<200",np.nan, inplace=True)
+    df["ABETA"].replace(">1700",np.nan, inplace=True)
+    df["TAU"].replace("<80",np.nan, inplace=True)
+    df["TAU"].replace(">1300",np.nan, inplace=True)
     return df 
 
 
