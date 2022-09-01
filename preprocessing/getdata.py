@@ -11,24 +11,25 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
         
-        Parametes: drop_young (if true, removes entries with age < 60)
+        Parameters: drop_young (if true, removes entries with age < 60)
         
         Processing steps:
             NaNs in "CDR" are replaced by 0
             Remove entries of young patients (Optional)
             Remove entries where CDR and MMSE results contradict each other
+            Drops the "Delay" and "Hand" columns 
         
         Returns: the processed Dataframe
     '''
     df = pd.read_csv('../data/oasis_cross-sectional.csv')
     df['CDR'].fillna(0, inplace=True)
+    df.drop(labels=['Delay', 'Hand'], axis=1, inplace=True)
     if drop_young:
         df=df[df['Age']>=60]
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
     df["CDR_"] = df["CDR"]
     df['CDR']=(df['CDR']>0).astype(int)
-    #logger.info(f"OASIS-csv loaded, drop_young={drop_young}, drop_contradictionas={drop_contradictions}")
     df["label"] = df["CDR"]
     df["dataset"] = "OASIS"
     return df
@@ -243,6 +244,44 @@ def get_slices_both(OASIS_IDs, ADNI_IDs, N=0, d=1, dim=0, m=95, normalize=True, 
     imgs_ADNI = get_slices_ADNI_new(IDs= ADNI_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize)
     return np.concatenate((imgs_OASIS, imgs_ADNI))
 
+
+def get_tadpole(drop_MCI = True):
+    '''
+    Loads the .csv dataset and returns a preprocessed dataframe.
+        
+        Parametes: drop_young (if true, removes entries with age < 60)
+        
+        Processing steps:
+            Sort by Subject ID
+            Rename column "Subject" to "ID"
+            adds a column "label" 
+            only takes the entries at the first visit 
+            drop all the columns without information 
+        
+        Returns: the processed Dataframe
+    '''
+    df = pd.read_csv("../tadpole_challenge/ADNIMERGE.csv")
+    df.rename(columns={"PTID":"ID"}, inplace=True)
+    df= df[(df['Month']==0) & (df['COLPROT'] == "ADNI1")]
+    
+    #logger.info("ADNI-csv loaded")
+    if drop_MCI:
+        df= df[(df["DX_bl"] == "AD") | (df["DX_bl"] == "CN")]
+        df["label"] = df["DX_bl"] == "AD"
+    df["label"] = (df["DX_bl"] == "AD") | (df["DX_bl"] == "MCI")
+    df["label"]=df["label"].astype(int)
+    return df
+
+
+def drop_tadpole(df): 
+    '''
+    Drops all the columns that are not used for the EDA or the modeling 
+    '''
+    col = ['FDG','AV45', 'CDRSB',  'MidTemp','DX','RID', 'VISCODE', 'SITE', 'COLPROT', 'ORIGPROT', 'EXAMDATE', 'DX_bl', 'PTETHCAT', 'PTRACCAT', 'PTMARRY', 'PIB', 'ADASQ4', 'RAVLT_learning', 'RAVLT_forgetting', 'RAVLT_perc_forgetting', 'LDELTOTAL', 'DIGITSCOR', 'TRABSCOR', 'FAQ', 'MOCA', 'EcogPtMem', 'EcogPtLang', 'EcogPtVisspat', 'EcogPtPlan', 'EcogPtOrgan', 'EcogPtDivatt', 'EcogPtTotal', 'EcogSPMem', 'EcogSPLang', 'EcogSPVisspat', 'EcogSPPlan', 'EcogSPOrgan', 'EcogSPDivatt', 'EcogSPTotal', 'FLDSTRENG', 'FSVERSION', 'IMAGEUID',  'Fusiform',  'ICV', 'mPACCdigit', 'mPACCtrailsB', 'EXAMDATE_bl', 'CDRSB_bl', 'ADAS11_bl', 'ADAS13_bl', 'ADASQ4_bl', 'MMSE_bl', 'RAVLT_immediate_bl', 'RAVLT_learning_bl', 'RAVLT_forgetting_bl', 'RAVLT_perc_forgetting_bl', 'LDELTOTAL_BL', 'DIGITSCOR_bl', 'TRABSCOR_bl', 'FAQ_bl', 'mPACCdigit_bl', 'mPACCtrailsB_bl', 'FLDSTRENG_bl', 'FSVERSION_bl', 'Ventricles_bl', 'Hippocampus_bl', 'WholeBrain_bl', 'Entorhinal_bl', 'Fusiform_bl', 'MidTemp_bl', 'ICV_bl', 'MOCA_bl', 'EcogPtMem_bl', 'EcogPtLang_bl', 'EcogPtVisspat_bl', 'EcogPtPlan_bl', 'EcogPtOrgan_bl', 'EcogPtDivatt_bl', 'EcogPtTotal_bl', 'EcogSPMem_bl', 'EcogSPLang_bl', 'EcogSPVisspat_bl', 'EcogSPPlan_bl', 'EcogSPOrgan_bl', 'EcogSPDivatt_bl', 'EcogSPTotal_bl', 'ABETA_bl', 'TAU_bl', 'PTAU_bl', 'FDG_bl', 'PIB_bl', 'AV45_bl', 'Years_bl', 'Month_bl', 'Month', 'M', 'update_stamp']
+    df.drop(columns=col, inplace=True, axis=1)
+    return df 
+
+
 def get_tts(N=0, d=1, dim=2, m=None, normalize=True, channels=3, drop=False):
     if m is None:
         mdict = {0: 95, 1: 110, 2: 90}
@@ -359,3 +398,4 @@ def get_slices_ADNI_new(IDs, N=0, d=1, dim=0, m=95, normalize=True):
     if normalize:
         imgs = imgs/imgs.max()
     return imgs
+
