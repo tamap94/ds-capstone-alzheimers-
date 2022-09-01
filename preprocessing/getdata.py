@@ -25,7 +25,7 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
     df['CDR'].fillna(0, inplace=True)
     df.drop(labels=['Delay', 'Hand'], axis=1, inplace=True)
     if drop_young:
-        df=df[df['Age']>=60]
+        df=df[df['Age']>=33]
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
     df["CDR_"] = df["CDR"]
