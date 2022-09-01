@@ -143,6 +143,9 @@ models/
 .mlflow_uri
 modelling/mlruns/
 modelling/logs/
+tadpole_challenge/data /
+tadpole_challenge/mlruns/
+ADNI/Diagnosis/
 modelling/saved_models/
 modelling/predictions/
 modelling/gifs/
