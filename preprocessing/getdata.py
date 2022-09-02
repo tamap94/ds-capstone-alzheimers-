@@ -28,10 +28,10 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
         df=df[df['Age']>=33]
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
-    #df["CDR_"] = df["CDR"]
+    df["CDR_"] = df["CDR"]
     df['CDR']=(df['CDR']>0).astype(int)
-    #df["label"] = df["CDR"]
-    #df["dataset"] = "OASIS"
+    df["label"] = df["CDR"]
+    df["dataset"] = "OASIS"
     return df
 
 def get_csvdata_ADNI(drop_MCI = True):
@@ -293,7 +293,7 @@ def col_tadpole(df):
 
 def get_tts(N=0, d=1, dim=2, m=None, normalize=True, channels=3, drop=False):
     if m is None:
-        mdict = {0: 95, 1: 110, 2: 90}
+        mdict = {0: 90, 1: 110, 2: 90}
         m = mdict[dim]
     df_a = get_csvdata_ADNI(drop)
     df_o= get_csvdata(drop, drop)
