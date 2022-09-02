@@ -18,7 +18,7 @@ from scipy import stats
 
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Dropout, InputLayer, Flatten, Conv2D, MaxPooling2D, BatchNormalization, RandomCrop, RandomRotation, RandomTranslation, LocallyConnected2D
+from keras.layers import Dense, Activation, Dropout, InputLayer, Flatten, Conv2D, MaxPooling2D, BatchNormalization, RandomCrop, RandomRotation, RandomTranslation, LocallyConnected2D, Cropping2D
 
 import logging
 from logging import getLogger
@@ -35,6 +35,16 @@ mlflow.set_experiment(EXPERIMENT_NAME)
 RSEED=42
 np.random.seed(42)
 tf.random.set_seed(42)
+
+def seg_to_channels(img):
+    channel_imgs= []
+    for i in range(img.shape[0]):
+        img_white = np.ma.masked_where(img[i] == np.unique(img[i])[1], img[i]).mask
+        img_grey = np.ma.masked_where(img[i] == np.unique(img[i])[2], img[i]).mask
+        img_csf = np.ma.masked_where(img[i] == 1, img[i]).mask
+        comb_channels = np.stack((img_white, img_grey, img_csf), axis=2)
+        channel_imgs.append(comb_channels)
+    return np.array(channel_imgs)
 
 def get_data(dataset, N=0, Ntest=0, d=1, m=90, dim=2, norm=True, file="masked", drop_young=True, drop_contradictions=True, drop_MCI = True):
 
@@ -109,8 +119,13 @@ def get_data(dataset, N=0, Ntest=0, d=1, m=90, dim=2, norm=True, file="masked", 
     data_params = f"N,d,m,dim,Ntest,norm,file={N},{d},{m},{dim},{Ntest},{norm},{file}"
     mlflow.log_params({"loading-params": data_params, "X_train.shape": X_train.shape, "X_test.shape":X_test.shape})
     
-    X_train = np.repeat(X_train[..., np.newaxis], 3, -1)
-    X_test = np.repeat(X_test[..., np.newaxis], 3, -1) 
+
+    if file == "segmented":
+        X_train = seg_to_channels(X_train)
+        X_test = seg_to_channels(X_test)
+    else:
+        X_train = np.repeat(X_train[..., np.newaxis], 3, -1)
+        X_test = np.repeat(X_test[..., np.newaxis], 3, -1) 
     
     return X_train, X_test, y_train, y_test, dfTest
   
@@ -124,11 +139,13 @@ def build_model(X_train, X_test, model_name="VGG_loc_connected"): #<=========== 
     logger.info(f"CNN model instantiated: {model_name}")
     mlflow.set_tag("Model Name",model_name)
     
-    INPUT_SHAPE = (HEIGHT, WIDTH, 3)
+    crop = ((20,20),(20,20))
+    INPUT_SHAPE = (HEIGHT-crop[0][0]-crop[0][1], WIDTH-crop[1][0]-crop[1][1], 3)
     b_model = tf.keras.applications.VGG16(include_top=False, weights='imagenet', input_shape=INPUT_SHAPE)
     for layer in b_model.layers:
         layer.trainable = True
     model = Sequential()
+    model.add(Cropping2D(cropping=(crop)))
     model.add(InputLayer(input_shape=INPUT_SHAPE))
     model.add(b_model)
     model.add(LocallyConnected2D(1, 3, strides=3))
@@ -144,39 +161,16 @@ def build_model(X_train, X_test, model_name="VGG_loc_connected"): #<=========== 
         staircase=False)
     optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule, name='Adam')
     model.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy'])
-
-    '''model = Sequential()
-    # layers
-    model.add(InputLayer(input_shape=[HEIGHT, WIDTH, 1], name='image'))
-    #model.add(RandomRotation(factor=0.2, fill_mode="reflect", interpolation="bilinear",  seed=None, fill_value=0.0))
-    model.add(LocallyConnected2D(1, 3, strides=3))
-    model.add(Conv2D(32, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Conv2D(32, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Dropout(0.2))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=[2, 2], strides=2))
-    model.add(Conv2D(64, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Conv2D(64, 3, activation="relu", padding="same", kernel_regularizer='l2'))
-    model.add(Dropout(0.2))
-    model.add(MaxPooling2D(pool_size=[2, 2], strides=2))
-    model.add(Flatten())
-    model.add(Dense(units=128, activation="relu", kernel_regularizer='l2'))
-    model.add(Dense(units = 1, kernel_initializer = 'uniform', activation = 'sigmoid'))
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001, name='Adam')
-
-    model.compile(
-        optimizer = optimizer,
-        loss = 'binary_crossentropy', 
-        metrics = ['accuracy'])
-    print(model.summary)'''
-        
+       
     return model
     
-def fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 32, VAL_SPLIT= 0.2, EPOCHS=25):
+def fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 32, VAL_SPLIT= 0.2, EPOCHS=25, early_stop=[False, 0.01, 10]):
     #with tf.device('/cpu:0'):
-    logger.info(f"Fitting model and storing history: batch_size={BATCH_SIZE},validation_split={VAL_SPLIT},epochs={EPOCHS}")
-
-    model.fit(X_train, y_train, batch_size = BATCH_SIZE, validation_split=VAL_SPLIT, epochs = EPOCHS)
+    logger.info(f"Fitting model and storing history: batch_size={BATCH_SIZE},validation_split={VAL_SPLIT},epochs={EPOCHS}, early stopping: {early_stop}")
+    callback= None
+    if early_stop[0] == True:
+        callback= tf.keras.callbacks.EarlyStopping(monitor="val_accuracy",  min_delta=early_stop[1],   patience=early_stop[2],  verbose=0,   mode="auto",  baseline=None,  restore_best_weights=True)
+    model.fit(X_train, y_train, batch_size = BATCH_SIZE, validation_split=VAL_SPLIT, epochs = EPOCHS, callbacks=[callback], use_multiprocessing=True, workers=2)
     # prediction of outcomes and conversion to binary
     logger.info("Predicting on Xtest")
     y_pred_probs = model.predict(X_test)
@@ -194,6 +188,7 @@ def fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= 
         y_pred = np.array(stats.mode(y_pred.reshape((test_length,slices_per_test_sample)), axis=1, keepdims=False))[0]
         
     logger.info("Measuring prediction performance and storing on ML-Flow")
+    print(f"Tes-Accuracy is {accuracy_score(y_test, y_pred.round()).round(2)}")
     mlflow.log_metric("test" + "-" + "acc", accuracy_score(y_test, y_pred.round()).round(2))
     mlflow.log_metric("test" + "-" + "recall", recall_score(y_test, y_pred.round()).round(2))
     mlflow.log_metric("test" + "-" + "precision", precision_score(y_test, y_pred.round()).round(2))
@@ -211,34 +206,33 @@ now= datetime.now().strftime("%H:%M:%S")
 
 #######################################################################################
 
-run_name = "VGG16_locConnected" #<============ TODO Change for every run
+run_name = "crop_test_20,25" #<============ TODO Change for every run
 ds= "both"
 normalize=True
 filetype= "masked"
-drop_y, drop_cont, drop_MCI = False, False, False
-#N=1
-slices = [(2, 88)]
-epochs=25
+drop_y, drop_cont, drop_MCI = True, True, False
+N=1
+slices = [(0, 91), (1, 112), (2,88)]
+epochs=100
+early_stopping= [True, 0.01, 10] #[yes/no, val_accuracy-increase, no. of epochs]
 batch_size=32
 
 ########################################################################################
 logging.basicConfig(format="%(asctime)s: %(message)s", filename="./logs/"+today+"/"+now+"-"+run_name+".log")
-for N in [1]:
-    for dim_slice in slices:
-        mlflow.start_run(run_name=run_name)
-        now_2 = datetime.now().strftime("%H:%M")
-        logger.info("Loading data")
-        mlflow.log_params({"drop_young":drop_y, "drop_contradictions":drop_cont, "drop_MCI":drop_MCI})
-        X_train, X_test, y_train, y_test, dfTest = get_data(
-            dataset=ds, N=N, Ntest=0, d=1, m=dim_slice[1], dim=dim_slice[0], norm=normalize,
-            file=filetype, drop_young=drop_y, drop_contradictions=drop_cont, drop_MCI = drop_MCI) 
-        logger.info("Building the model")
-        model= build_model(X_train, X_test)
-        logger.info("Training and predicting")
-        y_pred, y_pred_probs= fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= batch_size, VAL_SPLIT= 0.2, EPOCHS=epochs)
-        print(dfTest.shape, y_test.shape, y_pred.shape, y_pred_probs.shape)
-        dfTest["y_test"], dfTest["y_pred"], dfTest["y_pred_probs"] = y_test, y_pred, y_pred_probs
-        dfTest.to_csv("predictions/"+today+"/"+run_name+"-"+now_2+".csv")
-        model.save("saved_models/"+today+"/"+run_name+"-"+now_2)
-        print(os.path.abspath("."))
-        mlflow.end_run()
+for dim_slice in slices:
+    mlflow.start_run(run_name=run_name)
+    now_2 = datetime.now().strftime("%H:%M")
+    logger.info("Loading data")
+    mlflow.log_params({"drop_young":drop_y, "drop_contradictions":drop_cont, "drop_MCI":drop_MCI})
+    X_train, X_test, y_train, y_test, dfTest = get_data(
+        dataset=ds, N=N, Ntest=0, d=1, m=dim_slice[1], dim=dim_slice[0], norm=normalize,
+        file=filetype, drop_young=drop_y, drop_contradictions=drop_cont, drop_MCI = drop_MCI) 
+    logger.info("Building the model")
+    model= build_model(X_train, X_test)
+    logger.info("Training and predicting")
+    y_pred, y_pred_probs= fit_and_predict_model(model, X_train, y_train, X_test, Ntest=0, BATCH_SIZE= batch_size, VAL_SPLIT= 0.2, EPOCHS=epochs, early_stop = early_stopping)
+    dfTest["y_test"], dfTest["y_pred"], dfTest["y_pred_probs"] = y_test, y_pred, y_pred_probs
+    dfTest.to_csv("predictions/"+today+"/"+run_name+"-"+now_2+".csv")
+    model.save("saved_models/"+today+"/"+run_name+"-"+now_2)
+    print(os.path.abspath("."))
+    mlflow.end_run()
