@@ -4,37 +4,46 @@ import nibabel as nib
 import matplotlib.pyplot as plt
 import os
 from logging import getLogger
+from tqdm import tqdm
+from dipy.segment.tissue import TissueClassifierHMRF
 
 from sklearn.model_selection import train_test_split
 
-def get_csvdata(drop_young=True, drop_contradictions=True):
+def get_csvdata(drop_young=True, drop_contradictions=True, multiclass = False):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
         
-        Parameters: drop_young (if true, removes entries with age < 60)
+        Parametes: drop_young (if true, removes entries with age < 60)
         
         Processing steps:
             NaNs in "CDR" are replaced by 0
             Remove entries of young patients (Optional)
             Remove entries where CDR and MMSE results contradict each other
-            Drops the "Delay" and "Hand" columns 
         
         Returns: the processed Dataframe
     '''
     df = pd.read_csv('../data/oasis_cross-sectional.csv')
     df['CDR'].fillna(0, inplace=True)
-    df.drop(labels=['Delay', 'Hand'], axis=1, inplace=True)
     if drop_young:
-        df=df[df['Age']>=33]
+        df=df[df['Age']>=30]
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
-    df["CDR_"] = df["CDR"]
-    df['CDR']=(df['CDR']>0).astype(int)
-    df["label"] = df["CDR"]
+    df.drop(labels=['Delay', 'Hand'], axis=1, inplace=True)
+    df['label']=(df['CDR']>0).astype(int)
+    if multiclass:
+        df = df.join(pd.get_dummies(df["CDR"].replace({0.0:"CN", 0.5:"MCI", 1.0:"AD", 2.0:"AD"})))
+        def label(row):
+            if row.CN == 1:
+                return "CN"
+            if row.MCI == 1:
+                return "MCI"
+            if row.AD == 1:
+                return "AD"
+        df["label"] = df.apply(lambda row: label(row), axis=1)
     df["dataset"] = "OASIS"
     return df
 
-def get_csvdata_ADNI(drop_MCI = True):
+def get_csvdata_ADNI(drop_MCI = True, multiclass = False):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
         
@@ -59,6 +68,16 @@ def get_csvdata_ADNI(drop_MCI = True):
         df= df[(df["Group"] == "AD") | (df["Group"] == "CN")]
         df["label"] = df["Group"] == "AD"
     df["label"] = ((df["Group"] == "AD") | (df["Group"] == "MCI")).astype(int)
+    if multiclass:
+        df = df.join(pd.get_dummies(df["Group"]))
+        def label(row):
+            if row.CN == 1:
+                return "CN"
+            if row.MCI == 1:
+                return "MCI"
+            if row.AD == 1:
+                return "AD"
+        df["label"] = df.apply(lambda row: label(row), axis=1)
     df["dataset"] = "ADNI"
     return df
 
@@ -92,7 +111,7 @@ def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
                 len(IDs)*(1+2N) slices 
     '''
     imgs = []
-    for path in IDs:
+    for path in tqdm(IDs):
         if file=="segmented":
             path1 = '../data/Oasis_Data/' + path + '/FSL_SEG/'
             for path2 in os.listdir(path1):
@@ -118,7 +137,7 @@ def get_slices(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
 
 def get_3D_data(IDs, normalize=True):
     imgs = []
-    for path in IDs:
+    for path in tqdm(IDs):
         path1 = '../data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
         for path2 in os.listdir(path1):
             if path2.endswith('masked_gfc.img'):
@@ -168,29 +187,29 @@ def get_kaggle(TYPE='binary'):
     return X_train, X_test, y_train, y_test
 
 def get_ADNI_dataobj(path):
-        path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
-        foundimg = False
+    path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
+    foundimg = False
+    for root, dirs, files in os.walk(path1):
+        for filee in files: 
+            if filee.endswith('brainmask.mgz'):
+                img = nib.load(root+"/"+filee)
+                foundimg = True
+    if foundimg == False:
+        path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
         for root, dirs, files in os.walk(path1):
             for filee in files: 
                 if filee.endswith('brainmask.mgz'):
                     img = nib.load(root+"/"+filee)
                     foundimg = True
-        if foundimg == False:
-            path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
-            for root, dirs, files in os.walk(path1):
-                for filee in files: 
-                    if filee.endswith('brainmask.mgz'):
-                        img = nib.load(root+"/"+filee)
-                        foundimg = True
-        if foundimg == False:
-            print('could not find: ', path)
-            return False
-        else: 
-            return img
+    if foundimg == False:
+        print('could not find: ', path)
+        return False
+    else: 
+        return img
 
 def get_3D_data_ADNI(IDs, normalize=True):
     imgs = []
-    for path in IDs:
+    for path in tqdm(IDs):
         img = get_ADNI_dataobj(path)
         if img == False:
             continue
@@ -222,7 +241,7 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
                 len(IDs)*(1+2N) slices 
     '''        
     imgs = []
-    for path in IDs:
+    for path in tqdm(IDs):
         img = get_ADNI_dataobj(path)
         if img == False:
             continue
@@ -291,7 +310,7 @@ def col_tadpole(df):
     return df 
 
 
-def get_tts(N=0, d=1, dim=2, m=None, normalize=True, channels=3, drop=False):
+def get_tts(N=0, d=1, dim=2, m=None, normalize=True, channels=3, drop=False, segmented=False):
     if m is None:
         mdict = {0: 90, 1: 110, 2: 90}
         m = mdict[dim]
@@ -304,10 +323,14 @@ def get_tts(N=0, d=1, dim=2, m=None, normalize=True, channels=3, drop=False):
     y_o_train = y_o_train.repeat(1+2*N)
     y_a_train = y_a_train.repeat(1+2*N)
 
+    print("loading train OASIS 2D-Data")
     X_train_o = get_slices(df_o_train, dim=dim, m=m, N=N, d=d, normalize=normalize)
+    print("loading train ADNI 2D-Data")
     X_train_a = get_slices_ADNI_new(df_a_train, dim=dim, m=m, N=N, d=d, normalize=normalize)
 
+    print("loading test OASIS 2D-Data")
     X_test_o = get_slices(df_o_test, dim=dim, m=m, normalize=normalize)
+    print("loading test ADNI 2D-Data")
     X_test_a = get_slices_ADNI_new(df_a_test, dim=dim, m=m, normalize=normalize)
 
     X_train = np.concatenate((X_train_o, X_train_a), axis=0)
@@ -316,9 +339,17 @@ def get_tts(N=0, d=1, dim=2, m=None, normalize=True, channels=3, drop=False):
     y_train = np.concatenate((y_o_train, y_a_train))
     y_test = np.concatenate((y_o_test, y_a_test))
 
-    X_train = np.repeat(X_train[..., np.newaxis], channels, -1)
-    X_test = np.repeat(X_test[..., np.newaxis], channels, -1)
+    if segmented: 
+      print("segmenting data...")
+      X_train = np.repeat(X_train[..., np.newaxis], 1, -1)
+      X_test = np.repeat(X_test[..., np.newaxis], 1, -1)
+      X_train = np.array([segment(x)[:,:,0] for x in tqdm(X_train)])
+      X_test = np.array([segment(x)[:,:,0] for x in tqdm(X_test)])
+    else:
+      X_train = np.repeat(X_train[..., np.newaxis], channels, -1)
+      X_test = np.repeat(X_test[..., np.newaxis], channels, -1)
 
+    print("finished loading data")
     return X_train, X_test, y_train, y_test
 
 def crop_adni3D_trav(img):
@@ -393,7 +424,7 @@ def get_slices_ADNI_new(IDs, N=0, d=1, dim=0, m=95, normalize=True):
                 len(IDs)*(1+2N) slices 
     '''        
     imgs = []
-    for path in IDs:
+    for path in tqdm(IDs):
         img = get_ADNI_dataobj(path)
         if img == False:
             continue
@@ -408,3 +439,7 @@ def get_slices_ADNI_new(IDs, N=0, d=1, dim=0, m=95, normalize=True):
         imgs = imgs/imgs.max()
     return imgs
 
+def segment(X):
+    hmrf = TissueClassifierHMRF(verbose=False)
+    initial_segmentation, X, PVE = hmrf.classify(X, 3, 0.1)
+    return np.stack([(X==1).astype(int), (X==2).astype(int), (X==3).astype(int)], axis=-1)
