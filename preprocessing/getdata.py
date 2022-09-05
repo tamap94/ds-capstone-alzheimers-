@@ -13,12 +13,13 @@ def get_csvdata(drop_young=True, drop_contradictions=True, multiclass = False):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
         
-        Parametes: drop_young (if true, removes entries with age < 60)
+        Parameters: drop_young (if true, removes entries with age < 60)
         
         Processing steps:
             NaNs in "CDR" are replaced by 0
             Remove entries of young patients (Optional)
             Remove entries where CDR and MMSE results contradict each other
+            Drops the "Delay" and "Hand" columns 
         
         Returns: the processed Dataframe
     '''
