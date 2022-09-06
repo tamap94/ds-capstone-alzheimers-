@@ -54,11 +54,11 @@ def compare_two_means(images1, images2, title1=None, title2=None, all=False, box
     
 def demented(df):
     '''returns data entries where CDR >0'''
-    return df[(df["CDR"]=='mild') | (["CDR"]=='very mild') | (["CDR"]=='moderate')]
+    return df[(df["label"]=='AD') | (["label"]=='MCI')]
 
 def non_demented(df):
     '''returns data entries where CDR is 0'''
-    return df[df["CDR"]== 'no']
+    return df[df["label"]== 'CN']
 
 def young(df):
     '''returns data entries where age is <=30'''
