@@ -150,9 +150,7 @@ modelling/saved_models/
 modelling/predictions/
 modelling/gifs/
 preprocessing/gifs/
-modelling/potentially obsolete/mlruns/
-modelling/potentially obsolete/logs/
-modelling/potentially obsolete/saved_models/
-modelling/potentially obsolete/predictions/
-modelling/potentially obsolete/gifs/
-preprocessing/potentially obsolete/gifs/
+modelling/potentially obsolete/
+preprocessing/potentially obsolete/
+mlruns/
+modelling/preprocessing/potentially obsolete/
