@@ -7,7 +7,7 @@ from logging import getLogger
 
 from sklearn.model_selection import train_test_split
 
-def get_csvdata(drop_young=True, drop_contradictions=True):
+def get_csvdata(drop_young=True, drop_contradictions=True, multiclass = False):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
         
@@ -28,13 +28,21 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
         df=df[df['Age']>=33]
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
-    df["CDR_"] = df["CDR"]
-    df['CDR']=(df['CDR']>0).astype(int)
-    df["label"] = df["CDR"]
+    df['label']=(df['CDR']>0).astype(int)
+    if multiclass:
+        df = df.join(pd.get_dummies(df["CDR"].replace({0.0:"CN", 0.5:"MCI", 1.0:"AD", 2.0:"AD"})))
+        def label(row):
+            if row.CN == 1:
+                return "CN"
+            if row.MCI == 1:
+                return "MCI"
+            if row.AD == 1:
+                return "AD"
+        df["label"] = df.apply(lambda row: label(row), axis=1)
     df["dataset"] = "OASIS"
     return df
 
-def get_csvdata_ADNI(drop_MCI = True):
+def get_csvdata_ADNI(drop_MCI = True, multiclass = False):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
         
@@ -59,7 +67,17 @@ def get_csvdata_ADNI(drop_MCI = True):
         df= df[(df["Group"] == "AD") | (df["Group"] == "CN")]
         df["label"] = df["Group"] == "AD"
     df["label"] = ((df["Group"] == "AD") | (df["Group"] == "MCI")).astype(int)
-    df["dataset"] = "ADNI"
+    if multiclass:
+        df = df.join(pd.get_dummies(df["Group"]))
+        def label(row):
+            if row.CN == 1:
+                return "CN"
+            if row.MCI == 1:
+                return "MCI"
+            if row.AD == 1:
+                return "AD"
+        df["label"] = df.apply(lambda row: label(row), axis=1)
+        df["dataset"] = "ADNI"
     return df
 
 def rename_ADNI(IDs):
@@ -220,7 +238,7 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
 
         Returns: 
                 len(IDs)*(1+2N) slices 
-    '''        
+    '''       
     imgs = []
     for path in IDs:
         img = get_ADNI_dataobj(path)
@@ -391,7 +409,9 @@ def get_slices_ADNI_new(IDs, N=0, d=1, dim=0, m=95, normalize=True):
 
         Returns: 
                 len(IDs)*(1+2N) slices 
-    '''        
+    ''' 
+    if dim ==2:
+        m= m+15       
     imgs = []
     for path in IDs:
         img = get_ADNI_dataobj(path)
