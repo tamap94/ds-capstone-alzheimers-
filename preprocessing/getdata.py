@@ -7,7 +7,7 @@ from logging import getLogger
 
 from sklearn.model_selection import train_test_split
 
-def get_csvdata(drop_young=True, drop_contradictions=True):
+def get_csvdata(drop_young=True, drop_contradictions=True, binary=True):
     '''
     Loads the .csv dataset and returns a preprocessed dataframe.
         
@@ -28,9 +28,10 @@ def get_csvdata(drop_young=True, drop_contradictions=True):
         df=df[df['Age']>=33]
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
-    df["CDR_"] = df["CDR"]
-    df['CDR']=(df['CDR']>0).astype(int)
-    df["label"] = df["CDR"]
+    if binary:
+        df["CDR_"] = df["CDR"]
+        df['CDR']=(df['CDR']>0).astype(int)
+        df["label"] = df["CDR"]
     df["dataset"] = "OASIS"
     return df
 

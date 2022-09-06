@@ -54,23 +54,30 @@ def compare_two_means(images1, images2, title1=None, title2=None, all=False, box
     
 def demented(df):
     '''returns data entries where CDR >0'''
-    return df[df["CDR"]>0]
+    return df[(df["CDR"]=='mild') | (["CDR"]=='very mild') | (["CDR"]=='moderate')]
 
 def non_demented(df):
     '''returns data entries where CDR is 0'''
-    return df[df["CDR"]==0]
+    return df[df["CDR"]== 'no']
 
 def young(df):
     '''returns data entries where age is <=30'''
-    return df[df["Age"]<=30]
+    return df[df["Age"]<=33]
 
 def middleaged(df):
     '''returns data entries where age is >30 and <=65'''
-    return df[(df["Age"]>30) & (df["Age"]<=65)]
+    return df[(df["Age"]>33) & (df["Age"]<=65)]
 
 def old(df):
     '''returns data entries where age is >65'''
     return df[df["Age"]>65]
+
+
+def get_stack_info(df,stack):
+    stack_info=[]
+    for i, img in enumerate(stack):
+        stack_info.append([df["ID"].iloc[i], img.min().astype(int), img.max().astype(int), img.mean().round(1), np.median(img), img.shape[0], img.shape[1]])
+    return pd.DataFrame(stack_info, columns=["ID", "img_min", "img_max", "img_mean", "img_median", "height", "width"])
 
 
 
