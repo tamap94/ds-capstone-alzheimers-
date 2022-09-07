@@ -240,7 +240,7 @@ def get_slices_ADNI(IDs, N=0, d=1, dim=0, m=95, normalize=True):
 
         Returns: 
                 len(IDs)*(1+2N) slices 
-    '''        
+    '''       
     imgs = []
     for path in tqdm(IDs):
         img = get_ADNI_dataobj(path)
@@ -423,7 +423,9 @@ def get_slices_ADNI_new(IDs, N=0, d=1, dim=0, m=95, normalize=True):
 
         Returns: 
                 len(IDs)*(1+2N) slices 
-    '''        
+    ''' 
+    if dim ==2:
+        m= m+15       
     imgs = []
     for path in tqdm(IDs):
         img = get_ADNI_dataobj(path)
