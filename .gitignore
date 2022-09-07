@@ -1,3 +1,4 @@
+.mlflow_uri
 .DS_Store
 data/
 models/
@@ -142,3 +143,14 @@ models/
 .mlflow_uri
 modelling/mlruns/
 modelling/logs/
+tadpole_challenge/data /
+tadpole_challenge/mlruns/
+ADNI/Diagnosis/
+modelling/saved_models/
+modelling/predictions/
+modelling/gifs/
+preprocessing/gifs/
+modelling/potentially obsolete/
+preprocessing/potentially obsolete/
+mlruns/
+modelling/preprocessing/potentially obsolete/
