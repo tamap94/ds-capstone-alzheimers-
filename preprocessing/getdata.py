@@ -25,21 +25,23 @@ def get_csvdata(drop_young=True, drop_contradictions=True, multiclass = False):
     '''
     df = pd.read_csv('../data/oasis_cross-sectional.csv')
     df['CDR'].fillna(0, inplace=True)
+    df.rename(columns={"M/F":"Sex"},inplace=True);
     if drop_young:
         df=df[df['Age']>=30]
     if drop_contradictions:
         df = df[((df['CDR']==1.0) & (df['MMSE']<29)) | ((df['CDR']==0.5) & (df['MMSE']<30)) | ((df['CDR']==0.0) & (df['MMSE']>26))]
     df.drop(labels=['Delay', 'Hand'], axis=1, inplace=True)
     df['label']=(df['CDR']>0).astype(int)
+    df = df.join(pd.get_dummies(df["CDR"].replace({0.0:"CN", 0.5:"MCI", 1.0:"AD", 2.0:"AD"})))
+    def label(row):
+        if row.CN == 1:
+            return "CN"
+        if row.MCI == 1:
+            return "MCI"
+        if row.AD == 1:
+            return "AD"
+    df["Group"] = df.apply(lambda row: label(row), axis=1)
     if multiclass:
-        df = df.join(pd.get_dummies(df["CDR"].replace({0.0:"CN", 0.5:"MCI", 1.0:"AD", 2.0:"AD"})))
-        def label(row):
-            if row.CN == 1:
-                return "CN"
-            if row.MCI == 1:
-                return "MCI"
-            if row.AD == 1:
-                return "AD"
         df["label"] = df.apply(lambda row: label(row), axis=1)
     df["dataset"] = "OASIS"
     return df
