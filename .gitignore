@@ -132,7 +132,7 @@ dmypy.json
 
 #data
 data/
-models/
+#models/
 preprocessing/processed_data
 .mlflow_uri
 mlruns/
