@@ -12,28 +12,28 @@ def get_tts(N=0, d=1, dim=2, m=None, normalize=True, channels=3, drop=False, seg
     if m is None:
         mdict = {0: 90, 1: 110, 2: 90}
         m = mdict[dim]
-    df_a = get_csvdata_ADNI(drop_MCI= drop, multiclass=multiclass)[:20]
-    df_o= get_csvdata_OASIS(drop_young= drop, drop_contradictions=drop, multiclass=multiclass)[:20]
+    df_a = get_csvdata_ADNI(drop_MCI= drop, multiclass=multiclass)
+    df_o= get_csvdata_OASIS(drop_young= drop, drop_contradictions=drop, multiclass=multiclass)
 
     if multiclass:
-      df_a_train, df_a_test, y_a_train, y_a_test = train_test_split(df_a, df_a[['CN', 'MCI', 'AD']], stratify=df_a['label'], random_state=42)
-      df_o_train, df_o_test, y_o_train, y_o_test = train_test_split(df_o, df_o[['CN', 'MCI', 'AD']], stratify=df_o['label'], random_state=42)
+      df_a_train, df_a_test, y_a_train, y_a_test = train_test_split(df_a["ID"], df_a[['CN', 'MCI', 'AD']], stratify=df_a['label'], random_state=42)
+      df_o_train, df_o_test, y_o_train, y_o_test = train_test_split(df_o["ID"], df_o[['CN', 'MCI', 'AD']], stratify=df_o['label'], random_state=42)
     else:
-      df_a_train, df_a_test, y_a_train, y_a_test = train_test_split(df_a, df_a['label'], stratify=df_a['label'], random_state=42)
-      df_o_train, df_o_test, y_o_train, y_o_test = train_test_split(df_o, df_o['label'], stratify=df_o['label'], random_state=42)
+      df_a_train, df_a_test, y_a_train, y_a_test = train_test_split(df_a["ID"], df_a['label'], stratify=df_a['label'], random_state=42)
+      df_o_train, df_o_test, y_o_train, y_o_test = train_test_split(df_o["ID"], df_o['label'], stratify=df_o['label'], random_state=42)
 
     y_o_train = y_o_train.repeat(1+2*N)
     y_a_train = y_a_train.repeat(1+2*N)
 
     print("loading train OASIS 2D-Data")
-    X_train_o = get_slices_OASIS(df_o_train["ID"], dim=dim, m=m, N=N, d=d, normalize=normalize)
+    X_train_o = get_slices_OASIS(df_o_train, dim=dim, m=m, N=N, d=d, normalize=normalize)
     print("loading train ADNI 2D-Data")
-    X_train_a = get_slices_ADNI(df_a_train["ID"], dim=dim, m=m, N=N, d=d, normalize=normalize)
+    X_train_a = get_slices_ADNI(df_a_train, dim=dim, m=m, N=N, d=d, normalize=normalize)
 
     print("loading test OASIS 2D-Data")
-    X_test_o = get_slices_OASIS(df_o_test["ID"], dim=dim, m=m, normalize=normalize)
+    X_test_o = get_slices_OASIS(df_o_test, dim=dim, m=m, normalize=normalize)
     print("loading test ADNI 2D-Data")
-    X_test_a = get_slices_ADNI(df_a_test["ID"], dim=dim, m=m, normalize=normalize)
+    X_test_a = get_slices_ADNI(df_a_test, dim=dim, m=m, normalize=normalize)
 
     X_train = np.concatenate((X_train_o, X_train_a), axis=0)
     X_test = np.concatenate((X_test_o, X_test_a), axis=0)
@@ -63,7 +63,8 @@ X_train0, X_test0, y_train, y_test, dftest = get_tts(dim=0, N=N, d=d, normalize=
 X_train1, X_test1, y_train, y_test, dftest = get_tts(dim=1, N=N, d=d, normalize=True, segmented=True, multiclass=False)
 X_train2, X_test2, y_train, y_test, dftest = get_tts(dim=2, N=N, d=d, normalize=True, segmented=True, multiclass=False)
 
-dftest.to_csv("./preprocessing/processed_data/dftest.csv", index=False)
+print('saving data')
+dftest.to_csv("./modelling/predictions.csv", index=False)
 np.savez_compressed('./preprocessing/processed_data/segmented_slices.npz',
  X_train0=X_train0, X_test0=X_test0, X_train1=X_train1, X_test1=X_test1,
   X_train2=X_train2, X_test2=X_test2, y_train=y_train, y_test=y_test)

@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import pandas as pd
 from keras.models import Model
 from keras.layers import Dense, Dropout, Flatten, Concatenate, Input
 np.random.seed(42)
@@ -54,8 +55,16 @@ model.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['a
 mlflow.tensorflow.autolog()
 
 with tf.device('/device:GPU:0'):
-  training = model.fit([X_train0, X_train1, X_train2], y_train, epochs=2, shuffle=True, validation_data=([X_test0, X_test1, X_test2],y_test))
+  training = model.fit([X_train0, X_train1, X_train2], y_train, epochs=2)
 print("Training finished, saving the model under 'models/best_model'")
 model.save('models/best_model')
+
+#save predictions
+print('saving predictions')
+dftest = pd.read_csv('./modelling/predictions.csv')
+y_pred = model.predict([X_test0, X_test1, X_test2])
+dftest['pred'] = y_pred
+dftest['y_test'] = y_test
+dftest.to_csv('./modelling/predictions.csv')
 
 mlflow.end_run()

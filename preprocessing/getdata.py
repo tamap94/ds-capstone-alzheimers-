@@ -2,12 +2,14 @@ import numpy as np
 import pandas as pd
 import nibabel as nib
 import matplotlib.pyplot as plt
+import sys
+sys.path.append('../')
 import os
 from logging import getLogger
 from tqdm import tqdm
 
 
-from image_processing import crop_adni_to_oasis, segment
+from preprocessing.image_processing import crop_adni_to_oasis, segment
 from sklearn.model_selection import train_test_split
 
 def get_csvdata_OASIS(drop_young=True, drop_contradictions=True, multiclass = False):
@@ -24,9 +26,9 @@ def get_csvdata_OASIS(drop_young=True, drop_contradictions=True, multiclass = Fa
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv('./data/Oasis_Data/oasis_cross-sectional.csv')
+    df = pd.read_csv('../data/Oasis_Data/oasis_cross-sectional.csv')
     df['CDR'].fillna(0, inplace=True)
-    df.rename(columns={"M/F":"Sex"},inplace=True);
+    df.rename(columns={"M/F":"Sex"},inplace=True)
     if drop_young:
         df=df[df['Age']>=33]
     if drop_contradictions:
@@ -60,7 +62,7 @@ def get_csvdata_ADNI(drop_MCI = True, multiclass = False):
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv("./data/ADNI_Freesurfer/FreeSurfer_8_23_2022.csv").sort_values(["Subject","Description"])
+    df = pd.read_csv("../data/ADNI_Freesurfer/FreeSurfer_8_23_2022.csv").sort_values(["Subject","Description"])
     df.rename(columns={"Subject":"ID"}, inplace=True)
     df= df[(df["Description"] != "FreeSurfer Cross-Sectional Processing aparc+aseg") & (df["Description"] != "FreeSurfer Longitudinal Processing aparc+aseg")]
     image_IDs = []
@@ -285,7 +287,7 @@ def get_tadpole(drop_MCI = False):
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv("./data/ADNIMERGE.csv")
+    df = pd.read_csv("../data/tadpole_challenge/ADNIMERGE.csv")
     df.rename(columns={"PTID":"ID"}, inplace=True)
     df= df[(df['Month']==0) & (df['COLPROT'] == "ADNI1")]
     
