@@ -24,7 +24,7 @@ def get_csvdata_OASIS(drop_young=True, drop_contradictions=True, multiclass = Fa
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv('./data/oasis_cross-sectional.csv')
+    df = pd.read_csv('./data/Oasis_Data/oasis_cross-sectional.csv')
     df['CDR'].fillna(0, inplace=True)
     df.rename(columns={"M/F":"Sex"},inplace=True);
     if drop_young:

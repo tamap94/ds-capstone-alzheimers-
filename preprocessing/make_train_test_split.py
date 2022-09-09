@@ -64,6 +64,6 @@ X_train1, X_test1, y_train, y_test, dftest = get_tts(dim=1, N=N, d=d, normalize=
 X_train2, X_test2, y_train, y_test, dftest = get_tts(dim=2, N=N, d=d, normalize=True, segmented=True, multiclass=False)
 
 dftest.to_csv("./preprocessing/processed_data/dftest.csv", index=False)
-np.savez('./preprocessing/processed_data/segmented_slices.npz',
+np.savez_compressed('./preprocessing/processed_data/segmented_slices.npz',
  X_train0=X_train0, X_test0=X_test0, X_train1=X_train1, X_test1=X_test1,
   X_train2=X_train2, X_test2=X_test2, y_train=y_train, y_test=y_test)
