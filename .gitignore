@@ -131,9 +131,9 @@ dmypy.json
 .pyre/
 
 #data
-data/ADNI_Freesurfer
-data/Oasis_Data
-data/Freesurfer_Data
+data/
+models/
+preprocessing/processed_data
 .mlflow_uri
 mlruns/
 modelling/predictions/
