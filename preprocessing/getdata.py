@@ -282,7 +282,7 @@ def get_tadpole(drop_MCI = True):
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv("../tadpole_challenge/ADNIMERGE.csv")
+    df = pd.read_csv("../data/ADNIMERGE.csv")
     df.rename(columns={"PTID":"ID"}, inplace=True)
     df= df[(df['Month']==0) & (df['COLPROT'] == "ADNI1")]
     

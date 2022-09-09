@@ -1,7 +1,5 @@
-.mlflow_uri
+
 .DS_Store
-data/
-models/
 
 __pycache__/
 *.py[cod]
@@ -134,9 +132,9 @@ dmypy.json
 
 #data
 data/4_classes_Alzheimers_Dataset
+data/ADNI_Freesurfer
 data/Oasis_Data
 data/Freesurfer_Data
-data/oasis_cs_freesurfer_disc1.tar.gz
 ~$Image_Processing_Info.pptx
 Image_Processing_Info.pptx
 models/
