@@ -131,24 +131,9 @@ dmypy.json
 .pyre/
 
 #data
-data/4_classes_Alzheimers_Dataset
 data/ADNI_Freesurfer
 data/Oasis_Data
 data/Freesurfer_Data
-~$Image_Processing_Info.pptx
-Image_Processing_Info.pptx
-models/
 .mlflow_uri
 modelling/mlruns/
-modelling/logs/
-tadpole_challenge/data /
-tadpole_challenge/mlruns/
-ADNI/Diagnosis/
-modelling/saved_models/
 modelling/predictions/
-modelling/gifs/
-preprocessing/gifs/
-modelling/potentially obsolete/
-preprocessing/potentially obsolete/
-mlruns/
-modelling/preprocessing/potentially obsolete/
