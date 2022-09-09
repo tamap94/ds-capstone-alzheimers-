@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+from dipy.segment.tissue import TissueClassifierHMRF
 
 ## image loading
 def load_MRI_gifs(IDs, plane="all", rescale=True):

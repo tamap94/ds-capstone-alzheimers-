@@ -135,5 +135,5 @@ data/ADNI_Freesurfer
 data/Oasis_Data
 data/Freesurfer_Data
 .mlflow_uri
-modelling/mlruns/
+mlruns/
 modelling/predictions/

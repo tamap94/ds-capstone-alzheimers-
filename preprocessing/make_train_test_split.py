@@ -1,17 +1,19 @@
 import pandas as pd
 import numpy as np
 import os
+from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
 from getdata import get_csvdata_ADNI, get_csvdata_OASIS, get_slices_ADNI, get_slices_OASIS
+from image_processing import segment
 
 
 def get_tts(N=0, d=1, dim=2, m=None, normalize=True, channels=3, drop=False, segmented=False, multiclass = False):
     if m is None:
         mdict = {0: 90, 1: 110, 2: 90}
         m = mdict[dim]
-    df_a = get_csvdata_ADNI(drop_MCI= drop, multiclass=multiclass)
-    df_o= get_csvdata_OASIS(drop_young= drop, drop_contradictions=drop, multiclass=multiclass)
+    df_a = get_csvdata_ADNI(drop_MCI= drop, multiclass=multiclass)[:20]
+    df_o= get_csvdata_OASIS(drop_young= drop, drop_contradictions=drop, multiclass=multiclass)[:20]
 
     if multiclass:
       df_a_train, df_a_test, y_a_train, y_a_test = train_test_split(df_a, df_a[['CN', 'MCI', 'AD']], stratify=df_a['label'], random_state=42)
@@ -61,4 +63,7 @@ X_train0, X_test0, y_train, y_test, dftest = get_tts(dim=0, N=N, d=d, normalize=
 X_train1, X_test1, y_train, y_test, dftest = get_tts(dim=1, N=N, d=d, normalize=True, segmented=True, multiclass=False)
 X_train2, X_test2, y_train, y_test, dftest = get_tts(dim=2, N=N, d=d, normalize=True, segmented=True, multiclass=False)
 
-np.savez('../preprocessing/processed_data', X_train0=X_train0, X_test0=X_test0, X_train1=X_train1, X_test1=X_test1, X_train2=X_train2, X_test2=X_test2, y_train=y_train, y_test=y_test)
+dftest.to_csv("./preprocessing/processed_data/dftest.csv", index=False)
+np.savez('./preprocessing/processed_data/segmented_slices.npz',
+ X_train0=X_train0, X_test0=X_test0, X_train1=X_train1, X_test1=X_test1,
+  X_train2=X_train2, X_test2=X_test2, y_train=y_train, y_test=y_test)

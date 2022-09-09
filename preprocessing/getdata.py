@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import os
 from logging import getLogger
 from tqdm import tqdm
-from dipy.segment.tissue import TissueClassifierHMRF
 
-from image_processing import crop_adni_to_oasis
+
+from image_processing import crop_adni_to_oasis, segment
 from sklearn.model_selection import train_test_split
 
 def get_csvdata_OASIS(drop_young=True, drop_contradictions=True, multiclass = False):
@@ -24,7 +24,7 @@ def get_csvdata_OASIS(drop_young=True, drop_contradictions=True, multiclass = Fa
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv('../data/oasis_cross-sectional.csv')
+    df = pd.read_csv('./data/oasis_cross-sectional.csv')
     df['CDR'].fillna(0, inplace=True)
     df.rename(columns={"M/F":"Sex"},inplace=True);
     if drop_young:
@@ -60,7 +60,7 @@ def get_csvdata_ADNI(drop_MCI = True, multiclass = False):
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv("../data/ADNI_Freesurfer/FreeSurfer_8_23_2022.csv").sort_values(["Subject","Description"])
+    df = pd.read_csv("./data/ADNI_Freesurfer/FreeSurfer_8_23_2022.csv").sort_values(["Subject","Description"])
     df.rename(columns={"Subject":"ID"}, inplace=True)
     df= df[(df["Description"] != "FreeSurfer Cross-Sectional Processing aparc+aseg") & (df["Description"] != "FreeSurfer Longitudinal Processing aparc+aseg")]
     image_IDs = []
@@ -89,11 +89,11 @@ def rename_ADNI(IDs):
     '''renames all 3D brainsmask files to also contain the SubjectID'''
     imgs = []
     for path in IDs:
-        path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
+        path1 = './data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
         try: 
             path2 = path1+os.listdir(path1)[0]
         except:
-            path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
+            path1 = './data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
             path2 = path1+os.listdir(path1)[0]
         path3 = path2+"/"+os.listdir(path2)[0]
         for file_path in os.listdir(path3):
@@ -117,12 +117,12 @@ def get_slices_OASIS(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
     imgs = []
     for path in tqdm(IDs):
         if file=="segmented":
-            path1 = '../data/Oasis_Data/' + path + '/FSL_SEG/'
+            path1 = './data/Oasis_Data/' + path + '/FSL_SEG/'
             for path2 in os.listdir(path1):
                 if path2.endswith('fseg.img'):
                     img = nib.load(path1+path2)
         elif file=="masked":
-            path1 = '../data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
+            path1 = './data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
             for path2 in os.listdir(path1):
                 if path2.endswith('masked_gfc.img'):
                     img = nib.load(path1+path2)
@@ -142,7 +142,7 @@ def get_slices_OASIS(IDs, N=0, d=1, dim=0, m=95, normalize=True, file="masked"):
 def get_3D_data(IDs, normalize=True):
     imgs = []
     for path in tqdm(IDs):
-        path1 = '../data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
+        path1 = './data/Oasis_Data/' + path + '/PROCESSED/MPRAGE/T88_111/'
         for path2 in os.listdir(path1):
             if path2.endswith('masked_gfc.img'):
                 img = nib.load(path1+path2)
@@ -155,8 +155,8 @@ def get_3D_data(IDs, normalize=True):
     return imgs
 
 def get_kaggle(TYPE='binary'):
-    path_train = '../data/Alzheimer_s Dataset/train/'
-    path_test = '../data/Alzheimer_s Dataset/test/'
+    path_train = './data/Alzheimer_s Dataset/train/'
+    path_test = './data/Alzheimer_s Dataset/test/'
 
     dem = {'NonDemented': 0, 'VeryMildDemented': 1, 'MildDemented': 2, 'ModerateDemented': 3}
 
@@ -191,7 +191,7 @@ def get_kaggle(TYPE='binary'):
     return X_train, X_test, y_train, y_test
 
 def get_ADNI_dataobj(path):
-    path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
+    path1 = './data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Cross-Sectional_Processing_brainmask/"
     foundimg = False
     for root, dirs, files in os.walk(path1):
         for filee in files: 
@@ -199,7 +199,7 @@ def get_ADNI_dataobj(path):
                 img = nib.load(root+"/"+filee)
                 foundimg = True
     if foundimg == False:
-        path1 = '../data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
+        path1 = './data/ADNI_Freesurfer/ADNI/' + path + "/FreeSurfer_Longitudinal_Processing_brainmask/"
         for root, dirs, files in os.walk(path1):
             for filee in files: 
                 if filee.endswith('brainmask.mgz'):
@@ -285,7 +285,7 @@ def get_tadpole(drop_MCI = False):
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv("../data/ADNIMERGE.csv")
+    df = pd.read_csv("./data/ADNIMERGE.csv")
     df.rename(columns={"PTID":"ID"}, inplace=True)
     df= df[(df['Month']==0) & (df['COLPROT'] == "ADNI1")]
     
