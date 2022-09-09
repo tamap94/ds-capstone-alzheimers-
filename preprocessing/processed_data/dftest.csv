@@ -1,0 +1,11 @@
+ID,Sex,Age,Educ,SES,MMSE,CDR,eTIV,nWBV,ASF,label,AD,CN,MCI,Group,dataset,Image Data ID,Visit,Modality,Description,Type,Acq Date,Format,Downloaded
+OAS1_0013_MR1,F,81,5.0,2.0,30.0,0.0,1664.0,0.679,1.055,0,0.0,1.0,0.0,CN,OASIS,,,,,,,,
+OAS1_0003_MR1,F,73,4.0,3.0,27.0,0.5,1454.0,0.708,1.207,1,0.0,0.0,1.0,MCI,OASIS,,,,,,,,
+OAS1_0005_MR1,M,18,,,,0.0,1737.0,0.848,1.01,0,0.0,1.0,0.0,CN,OASIS,,,,,,,,
+OAS1_0009_MR1,F,20,,,,0.0,1505.0,0.843,1.166,0,0.0,1.0,0.0,CN,OASIS,,,,,,,,
+OAS1_0017_MR1,M,21,,,,0.0,1689.0,0.845,1.039,0,0.0,1.0,0.0,CN,OASIS,,,,,,,,
+002_S_0685,F,90,,,,,,,,0,,,,CN,ADNI,I172953,1.0,MRI,FreeSurfer Cross-Sectional Processing brainmask,Post-processed,7/06/2006,MGH,8/23/2022
+003_S_0907,F,89,,,,,,,,0,,,,CN,ADNI,I173176,1.0,MRI,FreeSurfer Cross-Sectional Processing brainmask,Post-processed,9/11/2006,MGH,8/23/2022
+002_S_1155,M,58,,,,,,,,1,,,,MCI,ADNI,I177778,1.0,MRI,FreeSurfer Cross-Sectional Processing brainmask,Post-processed,12/14/2006,MGH,8/23/2022
+002_S_0955,F,78,,,,,,,,1,,,,AD,ADNI,I190063,1.0,MRI,FreeSurfer Cross-Sectional Processing brainmask,Post-processed,10/11/2006,MGH,8/23/2022
+002_S_0782,M,82,,,,,,,,1,,,,MCI,ADNI,I177728,1.0,MRI,FreeSurfer Cross-Sectional Processing brainmask,Post-processed,8/14/2006,MGH,8/23/2022

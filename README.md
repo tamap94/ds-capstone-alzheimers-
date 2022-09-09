@@ -26,3 +26,9 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
+
+To run
+```python
+python preprocessing/make_train_test_split.py
+python modelling/CNN_train_and_predict.py
+```
