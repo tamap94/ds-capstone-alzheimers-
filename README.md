@@ -29,6 +29,8 @@ pip install -r requirements.txt
 
 To run
 ```python
+#Load the data, preprocess it and save it in preprocessing/processed_data as segmented_slices.npz
 python preprocessing/make_train_test_split.py
-python modelling/CNN_train_and_predict.py
+#Train the model and save it in models
+python modelling/CNN_modelling.py
 ```
