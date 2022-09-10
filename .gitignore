@@ -131,9 +131,11 @@ dmypy.json
 .pyre/
 
 #data
-data/
-models/
-preprocessing/processed_data/
+data/*
+models/*
+!models/.gitkeep
+preprocessing/processed_data/*
+!preprocessing/processed_data/.gitkeep
 .mlflow_uri
 mlruns/
 modelling/predictions/
