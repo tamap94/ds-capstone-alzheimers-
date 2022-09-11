@@ -267,8 +267,8 @@ def get_3D_data_ADNI(IDs, normalize=True):
 
 
 def get_slices_both(OASIS_IDs, ADNI_IDs, N=0, d=1, dim=0, m=95, normalize=True,  file="masked"):
-    imgs_OASIS = get_slices(IDs= OASIS_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize, file=file)
-    imgs_ADNI = get_slices_ADNI_new(IDs= ADNI_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize)
+    imgs_OASIS = get_slices_OASIS(IDs= OASIS_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize, file=file)
+    imgs_ADNI = get_slices_ADNI(IDs= ADNI_IDs, N=N, d=d, dim=dim, m=m, normalize=normalize)
     return np.concatenate((imgs_OASIS, imgs_ADNI))
 
 
@@ -287,7 +287,7 @@ def get_tadpole(drop_MCI = False):
         
         Returns: the processed Dataframe
     '''
-    df = pd.read_csv("../data/tadpole_challenge/ADNIMERGE.csv")
+    df = pd.read_csv("../data/ADNIMERGE.csv")
     df.rename(columns={"PTID":"ID"}, inplace=True)
     df= df[(df['Month']==0) & (df['COLPROT'] == "ADNI1")]
     

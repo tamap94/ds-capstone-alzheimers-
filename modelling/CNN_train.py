@@ -61,10 +61,10 @@ model.save('models/best_model')
 
 #save predictions
 print('saving predictions')
-dftest = pd.read_csv('./modelling/predictions.csv')
+dftest = pd.read_csv('./modelling/CNN_predictions.csv')
 y_pred = model.predict([X_test0, X_test1, X_test2])
 dftest['pred'] = y_pred
 dftest['y_test'] = y_test
-dftest.to_csv('./modelling/predictions.csv')
+dftest.to_csv('./modelling/CNN_predictions.csv')
 
 mlflow.end_run()

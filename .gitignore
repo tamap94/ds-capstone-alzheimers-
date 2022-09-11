@@ -131,17 +131,11 @@ dmypy.json
 .pyre/
 
 #data
-<<<<<<< HEAD
 data/*
 models/*
 !models/.gitkeep
 preprocessing/processed_data/*
 !preprocessing/processed_data/.gitkeep
-=======
-data/
-models/
-preprocessing/processed_data
->>>>>>> 1a41cf0 ("models" in gitignore)
 .mlflow_uri
 mlruns/
 modelling/predictions/
