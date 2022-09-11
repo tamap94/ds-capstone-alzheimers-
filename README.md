@@ -1,7 +1,7 @@
 # Project description:  
 In this project a neural network was used to predict Alzheimer's disease (AD) based on MRI images alone. The 3D images were derived from two different datasets (OASIS1 and ADNI1) and the two datasets were combined to have an almost equal distribution of healthy and diseased subjects. Analysis of the two dataset confirmed that the prevalence of AD increases with age. For the modeling, three 2D image slices representing three different axes were used and fed into a pre-trained VGG16 neural network. The outputs of the VGG16 were further been used in a DNN to make the predictions. With this model the accuracy is 76% and the recall at 94%.
 
-![Project overview](https://github.com/tamap94/ds-capstone-alzheimers-/blob/main/figures/BrainWatchers%20-%20Final%20Presentation%20(1).jpg)
+![Project overview](https://github.com/tamap94/ds-capstone-alzheimers-/blob/main/figures/capstone_image_TalentApp.png)
 
 ### Dataset:   
 OASIS1: 2D and 3D brain scans from 436 MRI sessions with 416 subjects 
