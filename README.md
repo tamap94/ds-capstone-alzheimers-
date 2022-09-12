@@ -10,7 +10,7 @@ https://www.oasis-brains.org/#data
 ADNI1: 3D MRI images of 826 subjects. 
 https://adni.loni.usc.edu
 
-Tadpole challenge: From this challenge we took the numerical data for the ADNI1 subjects. 
+Tadpole challenge: From this challenge we took the numerical data for the ADNI1 subjects (assessment tests, brain measurements). 
 https://tadpole.grand-challenge.org
 
 ### Goal:  
