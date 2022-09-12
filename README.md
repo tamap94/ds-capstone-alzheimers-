@@ -26,3 +26,11 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
+
+To run
+```python
+#Load the data, preprocess it and save it in preprocessing/processed_data as segmented_slices.npz
+python preprocessing/preprocess_data.py
+#Train the model and save it in models
+python modelling/CNN_train.py
+```

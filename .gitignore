@@ -1,7 +1,5 @@
-.mlflow_uri
+
 .DS_Store
-data/
-models/
 
 __pycache__/
 *.py[cod]
@@ -133,24 +131,11 @@ dmypy.json
 .pyre/
 
 #data
-data/4_classes_Alzheimers_Dataset
-data/Oasis_Data
-data/Freesurfer_Data
-data/oasis_cs_freesurfer_disc1.tar.gz
-~$Image_Processing_Info.pptx
-Image_Processing_Info.pptx
-models/
+data/*
+models/*
+!models/.gitkeep
+preprocessing/processed_data/*
+!preprocessing/processed_data/.gitkeep
 .mlflow_uri
-modelling/mlruns/
-modelling/logs/
-tadpole_challenge/data /
-tadpole_challenge/mlruns/
-ADNI/Diagnosis/
-modelling/saved_models/
-modelling/predictions/
-modelling/gifs/
-preprocessing/gifs/
-modelling/potentially obsolete/
-preprocessing/potentially obsolete/
 mlruns/
-modelling/preprocessing/potentially obsolete/
+modelling/predictions/

@@ -14,3 +14,4 @@ protobuf==3.20.1
 tensorflow-docs @ git+https://github.com/tensorflow/docs@4af23d4a420a3907367b07eb99ef6af48891ff97
 mlflow==1.28.0
 parsenvy==3.0.2
+dipy==1.5.0
