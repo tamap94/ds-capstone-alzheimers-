@@ -33,4 +33,5 @@ To run
 python preprocessing/preprocess_data.py
 #Train the model and save it in models
 python modelling/CNN_train.py
+#Model evaluation is in modelling/error_analysis.ipynb
 ```

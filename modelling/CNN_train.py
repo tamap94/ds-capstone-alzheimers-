@@ -35,7 +35,8 @@ def build_model(Input):
   x = Input
   x = b_model(x)
   x = Flatten()(x)
-  x = Dense(256, activation='relu', kernel_regularizer='l2')(x)
+  x = Dropout(0.3)(x)
+  x = Dense(512, activation='relu', kernel_regularizer='l2')(x)
   return x
 
 ##########
@@ -43,21 +44,33 @@ def build_model(Input):
 mlflow.start_run()
 
 x = Concatenate()([build_model(Input0), build_model(Input1), build_model(Input2)])
+x = Dropout(0.3)(x)
 x = Dense(512, activation='relu', kernel_regularizer='l2')(x)
 x = Dropout(0.3)(x)
 x = Dense(512, activation='relu', kernel_regularizer='l2')(x)
 out = Dense(1, activation='sigmoid')(x)
 
 model = Model(inputs=[Input0, Input1, Input2], outputs=out)
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001, name='Adam')
-model.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy'])
+
+lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
+    0.001,
+    decay_steps=100,
+    decay_rate=1,
+    staircase=False)
+lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+   boundaries = [600, 1400], 
+   values = [1e-3, 1e-4, 1e-5]
+)
+optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule, name='Adam')
+model.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics = ['accuracy']) #tf.keras.losses.BinaryFocalCrossentropy()
 
 mlflow.tensorflow.autolog()
 
 with tf.device('/device:GPU:0'):
-  training = model.fit([X_train0, X_train1, X_train2], y_train, epochs=2)
+  training = model.fit([X_train0, X_train1, X_train2], y_train, epochs=50, batch_size=32, validation_data=([X_test0, X_test1, X_test2], y_test))
 print("Training finished, saving the model under 'models/best_model'")
 model.save('models/best_model')
+pd.DataFrame(training.history).to_csv('modelling/CNN_history.csv')
 
 #save predictions
 print('saving predictions')
